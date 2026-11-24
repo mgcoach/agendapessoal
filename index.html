@@ -1605,7 +1605,14 @@ function seedSet(SEED_BOOKS) {
   tickI = setInterval(timerTick, 500);
   setInterval(checkReminders, 20000); checkReminders();
   let lastDay = today(); setInterval(() => { if (today() !== lastDay) { lastDay = today(); if (selDate < lastDay) selDate = lastDay; render(); } else if (view === 'hoje' && !$('#sheet').classList.contains('open')) render(); }, 60000);
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    const hadCtrl = !!navigator.serviceWorker.controller; let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadCtrl && !reloaded) { reloaded = true; location.reload(); } });
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+      reg.update().catch(() => {});
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+    }).catch(() => {});
+  }
   if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
 })();
 </script>
