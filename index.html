@@ -191,6 +191,8 @@ textarea.inp{resize:none;min-height:84px;line-height:1.4}
 .chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .chip.col.on{background:var(--c);border-color:var(--c);color:#fff;box-shadow:0 6px 14px color-mix(in srgb,var(--c) 35%,transparent)}
 .chip.day{width:40px;padding:0;justify-content:center}
+.chip.swatch,.chip.swatch.on{background:var(--c);border-color:transparent;border-radius:50%}
+.chip.swatch.on{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--c)}
 .dot{width:10px;height:10px;border-radius:50%;background:var(--c);display:inline-block}
 .switch-row{display:flex;align-items:center;gap:12px;background:var(--solid);border:1.5px solid var(--line2);border-radius:18px;padding:12px 14px;cursor:pointer}
 .switch-row .txt{flex:1;font-size:15px;font-weight:600;line-height:1.3}
@@ -394,7 +396,7 @@ const TYPES = [
   { id: 'faculdade', label: 'Faculdade', emoji: '🎓', color: '#10b981' },
   { id: 'pessoal', label: 'Pessoal', emoji: '⭐', color: '#f59e0b' },
 ];
-const BOOK_COLORS = ['#6366f1', '#a855f7', '#0ea5e9', '#10b981', '#ec4899', '#f59e0b', '#e5484d', '#14b8a6', '#334155'];
+const BOOK_COLORS = ['#6366f1', '#a855f7', '#0ea5e9', '#10b981', '#ec4899', '#f59e0b', '#e5484d', '#14b8a6', '#84cc16', '#334155'];
 const DURS = [15, 30, 45, 60, 90, 120];
 const REMINDS = [{ v: 0, l: 'Na hora' }, { v: 5, l: '5 min antes' }, { v: 15, l: '15 min' }, { v: 30, l: '30 min' }, { v: 60, l: '1 hora' }, { v: -1, l: 'Sem aviso' }];
 const WD = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -444,7 +446,7 @@ const DB = {
 };
 
 const DEFAULTS = () => ({
-  v: 1, tasks: [], books: [], sessions: [], readLog: [], notified: {}, grade: [], gradeDirty: false, gradeApplied: null, gradeSeq: 0,
+  v: 1, tasks: [], books: [], sessions: [], readLog: [], notified: {}, grade: [], gradeDirty: false, gradeApplied: null, gradeSeq: 0, seeds: [],
   settings: { name: 'Matheus', theme: 'light', vacStart: '', vacEnd: '', remind: 15, calDefault: true, notif: false, focus: 25, brk: 5, installHidden: false, vacHidden: false },
   timer: { mode: 'focus', total: 1500, remaining: 1500, endAt: null, ref: '' }
 });
@@ -461,6 +463,7 @@ let F = null; // form atual
 /* ---------------- helpers de dados ---------------- */
 const typeOf = id => TYPES.find(t => t.id === id) || TYPES[0];
 const bookOf = id => S.books.find(b => b.id === id);
+const bookName = bk => (bk && (bk.short || bk.title)) || '';
 const colorOf = t => (t.book && bookOf(t.book)?.color) || typeOf(t.type).color;
 const startOf = t => { const d = parseYmd(t.date); if (t.time) { const [h, m] = t.time.split(':').map(Number); d.setHours(h, m, 0, 0); } else d.setHours(23, 59, 0, 0); return d; };
 const sortTasks = arr => arr.sort((a, b) => a.date.localeCompare(b.date) || ((a.time || '99') .localeCompare(b.time || '99')) || a.createdAt - b.createdAt);
@@ -516,7 +519,7 @@ function taskCard(t, opts = {}) {
       <div class="t-meta">
         ${live ? '<span class="tag live">Agora</span>' : ''}
         ${opts.showDate ? `<span class="tag">${relDay(t.date)}</span>` : ''}
-        <span class="tag c">${b ? '📘 ' + esc(b.title.length > 18 ? b.title.slice(0, 17) + '…' : b.title) : ty.emoji + ' ' + ty.label}</span>
+        <span class="tag c">${b ? '📘 ' + esc(bookName(b)) : ty.emoji + ' ' + ty.label}</span>
         ${t.remind >= 0 && t.time && !t.done ? `<span class="tag">${I.bell}${remindLabel(t.remind)}</span>` : ''}
         ${t.cal ? `<span class="tag">${I.cal}iPhone</span>` : ''}
         ${t.grade ? `<span class="tag">🏫 até ${t.gEnd || ''}</span>` : t.series ? `<span class="tag">${I.rep}</span>` : ''}
@@ -634,7 +637,7 @@ const fromMin = m => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
 const blockColor = b => (b.book && bookOf(b.book)?.color) || typeOf(b.type).color;
 const blocksOn = d => S.grade.filter(b => b.day === d).sort((a, b) => toMin(a.start) - toMin(b.start));
 const abbr = s => { const w = (s || '').split(/\s+/).filter(x => x.length > 2)[0] || s || ''; return w.length <= 7 ? w : w.slice(0, 5) + '.'; };
-const blockShort = b => { const bk = bookOf(b.book); if (bk && (!b.title || b.title === `Ler ${bk.title}`)) return bk.title.split(/\s+/).filter(w => w.length > 2).slice(0, 2).join(' ') || bk.title; return b.title; };
+const blockShort = b => { const bk = bookOf(b.book); if (bk && (!b.title || b.title === `Ler ${bookName(bk)}` || b.title === `Ler ${bk.title}`)) return bk.short || bk.title.split(/\s+/).filter(w => w.length > 2).slice(0, 2).join(' ') || bk.title; return b.title; };
 const markGrade = () => { S.gradeDirty = S.grade.length > 0; };
 let gradeDay = new Date().getDay();
 
@@ -680,8 +683,8 @@ function viewGrade() {
     const live = gradeDay === td && nowMin >= toMin(b.start) && nowMin < toMin(b.end);
     dayHtml += `<div class="task gtask ${live ? 'now' : ''}" style="--c:${blockColor(b)}" data-gblock="${b.id}">
       <div class="t-time"><b>${b.start}</b><span>até ${b.end}</span></div>
-      <div class="t-body"><div class="t-title">${esc(b.title || (bk ? 'Ler ' + bk.title : 'Estudo'))}</div>${b.desc ? `<div class="t-desc">${esc(b.desc)}</div>` : ''}
-        <div class="t-meta">${live ? '<span class="tag live">Agora</span>' : ''}<span class="tag c">${bk ? '📘 ' + esc(bk.title.length > 20 ? bk.title.slice(0, 19) + '…' : bk.title) : ty.emoji + ' ' + ty.label}</span><span class="tag">${I.clock}${durLabel(dur)}</span>${b.remind >= 0 ? `<span class="tag">${I.bell}${remindLabel(b.remind)}</span>` : ''}</div></div>
+      <div class="t-body"><div class="t-title">${esc(b.title || (bk ? 'Ler ' + bookName(bk) : 'Estudo'))}</div>${b.desc ? `<div class="t-desc">${esc(b.desc)}</div>` : ''}
+        <div class="t-meta">${live ? '<span class="tag live">Agora</span>' : ''}<span class="tag c">${bk ? '📘 ' + esc(bookName(bk)) : ty.emoji + ' ' + ty.label}</span><span class="tag">${I.clock}${durLabel(dur)}</span>${b.remind >= 0 ? `<span class="tag">${I.bell}${remindLabel(b.remind)}</span>` : ''}</div></div>
     </div>`;
   });
   const dayMin = bl.reduce((a, b) => a + toMin(b.end) - toMin(b.start), 0);
@@ -713,12 +716,12 @@ function openBlockForm(b, preset = {}) {
   const edit = !!b;
   F = { kind: 'block', edit, id: b?.id, days: edit ? [b.day] : (preset.days || [gradeDay]), book: edit ? (b.book || '') : (preset.book ?? (S.books[0]?.id || '')), type: b?.type || 'leitura', remind: b?.remind ?? S.settings.remind };
   const start = b?.start || preset.start || '07:00', end = b?.end || preset.end || fromMin(Math.min(toMin(start) + 90, 1439));
-  const bookOpts = [...S.books.map(x => ({ v: x.id, l: esc(x.title.length > 22 ? x.title.slice(0, 21) + '…' : x.title), c: x.color })), { v: '', l: '✏️ Outro' }];
+  const bookOpts = [...S.books.map(x => ({ v: x.id, l: esc(bookName(x)), c: x.color })), { v: '', l: '✏️ Outro' }];
   const bk = bookOf(F.book);
   openSheet(`
     <h2>${edit ? 'Editar aula' : 'Nova aula'}</h2>
     ${S.books.length ? `<div class="field"><label>Livro</label>${chipsHtml('book', bookOpts, F.book)}</div>` : ''}
-    <div class="field"><input class="inp big" id="gTitle" placeholder="${bk ? esc('Ler ' + bk.title) : 'O que você vai estudar?'}" value="${esc(b && !(bk && b.title === 'Ler ' + bk.title) ? b.title : '')}" maxlength="80" autocomplete="off">
+    <div class="field"><input class="inp big" id="gTitle" placeholder="${bk ? esc('Ler ' + bookName(bk)) : 'O que você vai estudar?'}" value="${esc(b && !(bk && b.title === 'Ler ' + bookName(bk)) ? b.title : '')}" maxlength="80" autocomplete="off">
       <div class="hint">Deixe em branco para usar “Ler + nome do livro”.</div></div>
     <div class="field"><label>${edit ? 'Dia' : 'Dias da semana'}</label>
       ${edit ? '' : `<div class="chips" style="margin-bottom:8px"><button type="button" class="chip" data-days="wk">Seg a Sex</button><button type="button" class="chip" data-days="all">Todos</button></div>`}
@@ -738,7 +741,7 @@ function saveBlock() {
   if (!F.days.length) { toast('Escolha pelo menos um dia'); return; }
   const bk = bookOf(F.book);
   let title = $('#gTitle').value.trim();
-  if (!title) { if (bk) title = `Ler ${bk.title}`; else { const i = $('#gTitle'); i.classList.remove('shake'); void i.offsetWidth; i.classList.add('shake'); i.focus(); return; } }
+  if (!title) { if (bk) title = `Ler ${bookName(bk)}`; else { const i = $('#gTitle'); i.classList.remove('shake'); void i.offsetWidth; i.classList.add('shake'); i.focus(); return; } }
   const data = { start, end, title, book: F.book, type: F.type, remind: F.remind, desc: $('#gDesc').value.trim() };
   if (F.edit) Object.assign(S.grade.find(x => x.id === F.id), data, { day: F.days[0] });
   else F.days.forEach(d => S.grade.push({ id: uid(), day: d, ...data }));
@@ -770,8 +773,8 @@ function saveCopyDay() {
 function gradeTemplate() {
   const a = S.books[0], b = S.books[1] || S.books[0], r = S.settings.remind;
   [1, 2, 3, 4, 5].forEach(d => {
-    S.grade.push({ id: uid(), day: d, start: '07:00', end: '08:30', book: a?.id || '', type: 'leitura', remind: r, title: a ? `Ler ${a.title}` : 'Leitura 1', desc: '' });
-    S.grade.push({ id: uid(), day: d, start: '09:00', end: '10:30', book: b?.id || '', type: 'leitura', remind: r, title: b ? `Ler ${b.title}` : 'Leitura 2', desc: '' });
+    S.grade.push({ id: uid(), day: d, start: '07:00', end: '08:30', book: a?.id || '', type: 'leitura', remind: r, title: a ? `Ler ${bookName(a)}` : 'Leitura 1', desc: '' });
+    S.grade.push({ id: uid(), day: d, start: '09:00', end: '10:30', book: b?.id || '', type: 'leitura', remind: r, title: b ? `Ler ${bookName(b)}` : 'Leitura 2', desc: '' });
   });
   gradeDay = [1, 2, 3, 4, 5].includes(new Date().getDay()) ? new Date().getDay() : 1;
   markGrade(); persist(); render(); toast('Modelo criado — toque numa aula para ajustar');
@@ -871,11 +874,18 @@ function viewMonth() {
   `;
 }
 
+function bookMinutes(id, since) {
+  const done = S.tasks.filter(t => t.book === id && t.done && t.time && t.doneAt && (!since || ymd(new Date(t.doneAt)) >= since));
+  const days = new Set(done.map(t => ymd(new Date(t.doneAt))));
+  return done.reduce((a, t) => a + (t.dur || 0), 0) + S.sessions.filter(s => s.ref === id && !days.has(s.date) && (!since || s.date >= since)).reduce((a, s) => a + s.min, 0);
+}
+const gradeMinFor = id => S.grade.filter(g => g.book === id).reduce((a, g) => a + toMin(g.end) - toMin(g.start), 0);
+const hLabel = m => m ? durLabel(m) : '0h';
 function bookStats(b) {
   const left = Math.max(0, b.pages - b.page);
   const pct = b.pages ? Math.min(100, b.page / b.pages * 100) : 0;
   let goal = '';
-  const target = b.goal || S.settings.vacEnd;
+  const target = b.goal;
   if (left === 0 && b.pages) goal = '✅ Livro concluído!';
   else if (target && target >= today()) {
     const days = diffDays(today(), target) + 1;
@@ -885,34 +895,34 @@ function bookStats(b) {
 }
 
 function viewLivros() {
-  const pagesRead = S.readLog.reduce((a, r) => a + Math.max(0, r.pages), 0);
   const weekStart = addDays(today(), -6);
-  const pagesWeek = S.readLog.filter(r => r.date >= weekStart).reduce((a, r) => a + Math.max(0, r.pages), 0);
-  const doneBooks = S.books.filter(b => b.pages && b.page >= b.pages).length;
+  const minWeek = S.books.reduce((a, b) => a + bookMinutes(b.id, weekStart), 0);
+  const minAll = S.books.reduce((a, b) => a + bookMinutes(b.id), 0);
+  const inGrade = S.books.filter(b => gradeMinFor(b.id)).length;
   return `
-  <div class="top"><div><h1>Livros</h1><div class="sub">Sua estante das férias</div></div>
+  <div class="top"><div><h1>Livros</h1><div class="sub">Sua estante · ${S.books.length} ${S.books.length === 1 ? 'livro' : 'livros'}</div></div>
     <button class="iconbtn" data-act="newBook" aria-label="Novo livro">${I.plus}</button></div>
-  ${S.books.length ? `<div class="stat-row"><div class="stat"><b>${pagesWeek}</b><span>págs na semana</span></div><div class="stat"><b>${pagesRead}</b><span>págs no total</span></div><div class="stat"><b>${doneBooks}/${S.books.length}</b><span>concluídos</span></div></div>` : ''}
-  <div class="section-h"><h3>Lendo agora</h3>${S.books.length ? '<button class="link" data-act="newBook">+ Livro</button>' : ''}</div>
+  ${S.books.length ? `<div class="stat-row"><div class="stat"><b>${hLabel(minWeek)}</b><span>lidas na semana</span></div><div class="stat"><b>${hLabel(minAll)}</b><span>lidas no total</span></div><div class="stat"><b>${inGrade}/${S.books.length}</b><span>na grade</span></div></div>` : ''}
+  <div class="section-h"><h3>Estante</h3>${S.books.length ? '<button class="link" data-act="newBook">+ Livro</button>' : ''}</div>
   ${S.books.length ? `<div class="list">${S.books.map(b => {
     const st = bookStats(b);
-    const initials = b.title.split(/\s+/).filter(w => w.length > 2).slice(0, 2).map(w => w[0]).join('').toUpperCase() || b.title.slice(0, 2).toUpperCase();
-    const planned = S.tasks.filter(t => t.book === b.id && !t.done && t.date >= today()).length;
+    const cover = b.short || b.title.split(/\s+/).filter(w => w.length > 2).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+    const mRead = bookMinutes(b.id), mWeek = gradeMinFor(b.id);
     return `<div class="card" style="--c:${b.color}">
       <div class="book">
-        <div class="cover" style="--c:${b.color}">${esc(initials)}</div>
+        <div class="cover" style="--c:${b.color};font-size:${cover.length >= 9 ? 11.5 : cover.length > 6 ? 13 : 15}px;overflow-wrap:anywhere">${esc(cover)}</div>
         <div class="b-info" data-editbook="${b.id}">
           <div class="b-title">${esc(b.title)}</div>
-          <div class="b-auth">${esc(b.author || '')}${planned ? ` · ${planned} sessões planejadas` : ''}</div>
+          <div class="b-auth">${esc(b.author || '')}${b.ed ? ` · ${esc(b.ed)}` : ''}</div>
           <div class="pbar"><i style="width:${st.pct}%"></i></div>
-          <div class="b-nums"><span>pág. <b>${b.page}</b> de ${b.pages}</span><span><b>${Math.round(st.pct)}%</b> · faltam ${st.left}</span></div>
+          <div class="b-nums"><span>pág. <b>${b.page}</b> de ${b.pages}</span><span><b>${Math.round(st.pct)}%</b></span></div>
         </div>
       </div>
-      ${st.goal ? `<div class="b-goal">${st.goal}</div>` : ''}
-      <div class="b-actions"><button class="btn sm" data-logbook="${b.id}">📈 Registrar leitura</button><button class="btn sm primary" data-planbook="${b.id}">🗓️ Plano de leitura</button></div>
+      <div class="b-goal">⏱️ <b>${hLabel(mRead)}</b> de leitura · ${mWeek ? `🏫 <b>${durLabel(mWeek)}</b> por semana na grade` : 'ainda fora da grade'}${st.goal ? `<br>${st.goal}` : ''}</div>
+      <div class="b-actions"><button class="btn sm" data-logbook="${b.id}">📈 Onde parei</button><button class="btn sm primary" data-gradebook="${b.id}">🏫 Pôr na grade</button></div>
     </div>`;
   }).join('')}</div>`
-    : `<div class="card empty"><div class="em">📚</div><b>Adicione os livros que você comprou</b><p>Informe o total de páginas e eu calculo quantas páginas por dia você precisa ler — e monto o cronograma com lembretes.</p><button class="btn primary" data-act="newBook">${I.plus} Adicionar livro</button></div>`}
+    : `<div class="card empty"><div class="em">📚</div><b>Adicione os livros que você comprou</b><p>Depois é só colocar cada um na grade semanal, nos horários que você quiser.</p><button class="btn primary" data-act="newBook">${I.plus} Adicionar livro</button></div>`}
   `;
 }
 
@@ -921,7 +931,7 @@ function viewFoco() {
   const days = [...Array(7)].map((_, i) => addDays(today(), i - 6));
   const mins = days.map(focusMinOn), max = Math.max(30, ...mins);
   const week = mins.reduce((a, b) => a + b, 0);
-  const refs = [{ id: '', l: 'Geral' }, ...S.books.map(b => ({ id: b.id, l: b.title, c: b.color }))];
+  const refs = [{ id: '', l: 'Geral' }, ...S.books.map(b => ({ id: b.id, l: bookName(b), c: b.color }))];
   return `
   <div class="top"><div><h1>Foco</h1><div class="sub">Blocos de estudo sem distração</div></div>
     <button class="iconbtn" data-act="settings">${I.gear}</button></div>
@@ -1036,7 +1046,7 @@ function openTaskForm(t, preset = {}) {
 }
 function renderTaskForm() {
   const f = F;
-  const bookOpts = [{ v: '', l: 'Nenhum' }, ...S.books.map(b => ({ v: b.id, l: esc(b.title.length > 20 ? b.title.slice(0, 19) + '…' : b.title), c: b.color }))];
+  const bookOpts = [{ v: '', l: 'Nenhum' }, ...S.books.map(b => ({ v: b.id, l: esc(bookName(b)), c: b.color }))];
   openSheet(`
     <h2>${f.edit ? 'Editar tarefa' : 'Nova tarefa'}</h2>
     ${f.edit ? '' : `<div class="quick">${QUICK.map((q, i) => `<button class="chip" data-quick="${i}">${typeOf(q.type).emoji} ${q.t}</button>`).join('')}</div>`}
@@ -1149,21 +1159,22 @@ function openBookForm(b) {
   openSheet(`
     <h2>${edit ? 'Editar livro' : 'Novo livro'}</h2>
     <div class="field"><input class="inp big" id="bTitle" placeholder="Título do livro" value="${esc(b?.title || '')}" autocomplete="off"></div>
-    <div class="field"><input class="inp" id="bAuthor" placeholder="Autor" value="${esc(b?.author || '')}" autocomplete="off"></div>
+    <div class="field"><input class="inp" id="bAuthor" placeholder="Autor(es)" value="${esc(b?.author || '')}" autocomplete="off"></div>
+    <div class="field"><div class="row2"><div><input class="inp" id="bShort" placeholder="Ex.: Guyton" value="${esc(b?.short || '')}" maxlength="18" autocomplete="off"><div class="hint">Nome curto (grade e lembretes)</div></div><div><input class="inp" id="bEd" placeholder="Ex.: 14ª ed. · GEN" value="${esc(b?.ed || '')}" autocomplete="off"><div class="hint">Edição / editora</div></div></div></div>
     <div class="field"><label>Páginas</label><div class="row2">
       <div><input class="inp" id="bPages" type="number" inputmode="numeric" placeholder="Total" value="${b?.pages || ''}"><div class="hint">Total de páginas</div></div>
       <div><input class="inp" id="bPage" type="number" inputmode="numeric" placeholder="0" value="${b?.page ?? 0}"><div class="hint">Página onde está</div></div></div></div>
-    <div class="field"><label>Meta: terminar até</label><input class="inp" id="bGoal" type="date" value="${b?.goal || S.settings.vacEnd || ''}"><div class="hint">Usada para calcular as páginas por dia.</div></div>
-    <div class="field"><label>Cor</label>${chipsHtml('bcolor', BOOK_COLORS.map(c => ({ v: c, l: '&nbsp;', c, cls: 'day' })), F.color)}</div>
+    <div class="field"><label>Meta de término (opcional)</label><input class="inp" id="bGoal" type="date" value="${b?.goal || ''}"><div class="hint">Deixe vazio para ler por horas, sem meta de páginas.</div></div>
+    <div class="field"><label>Cor</label>${chipsHtml('bcolor', BOOK_COLORS.map(c => ({ v: c, l: '&nbsp;', c, cls: 'day swatch' })), F.color)}</div>
     <button class="btn primary block" id="bSave">${edit ? 'Salvar' : 'Adicionar à estante'}</button>
-    ${edit ? `<div style="margin-top:8px"><button class="btn danger block sm" id="bDel">Remover livro</button></div>` : ''}
+    ${edit ? `<div class="actions-grid"><button class="btn sm" data-planbook="${b.id}">📄 Plano por páginas</button><button class="btn danger sm" id="bDel">Remover livro</button></div>` : ''}
   `);
 }
 function saveBook() {
   const title = $('#bTitle').value.trim(), pages = parseInt($('#bPages').value) || 0;
   if (!title) { $('#bTitle').classList.add('shake'); $('#bTitle').focus(); return; }
   if (!pages) { $('#bPages').classList.remove('shake'); void $('#bPages').offsetWidth; $('#bPages').classList.add('shake'); $('#bPages').focus(); return; }
-  const data = { title, author: $('#bAuthor').value.trim(), pages, page: Math.min(pages, Math.max(0, parseInt($('#bPage').value) || 0)), goal: $('#bGoal').value, color: F.color };
+  const data = { title, author: $('#bAuthor').value.trim(), pages, page: Math.min(pages, Math.max(0, parseInt($('#bPage').value) || 0)), goal: $('#bGoal').value, color: F.color, short: $('#bShort').value.trim(), ed: $('#bEd').value.trim() };
   if (F.id) Object.assign(bookOf(F.id), data); else S.books.push({ id: uid(), ...data, createdAt: Date.now() });
   persist(); closeSheet(); render(); toast(F?.id ? 'Livro atualizado' : 'Livro adicionado 📚');
 }
@@ -1451,7 +1462,7 @@ document.addEventListener('click', async e => {
     if (g === 'theme') { S.settings.theme = val; applyTheme(); persist(); return; }
     if (g === 'sremind') { S.settings.remind = val; persist(); return; }
     if (g === 'bcolor') { F.color = val; return; }
-    if (g === 'book' && F.kind === 'block') { const bk = bookOf(val); $('#gTitle').placeholder = bk ? `Ler ${bk.title}` : 'O que você vai estudar?'; }
+    if (g === 'book' && F.kind === 'block') { const bk = bookOf(val); $('#gTitle').placeholder = bk ? `Ler ${bookName(bk)}` : 'O que você vai estudar?'; }
     F[g] = val; return;
   }
   const dsp = el.closest('[data-days]'); if (dsp && F) { F.days = dsp.dataset.days === 'all' ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5]; if (F.kind === 'copy') F.days = F.days.filter(d => d !== F.from); $$('[data-group="days"] .chip').forEach(c => c.classList.toggle('on', F.days.includes(+c.dataset.v))); updateRepCount(); return; }
@@ -1477,8 +1488,9 @@ document.addEventListener('click', async e => {
   if (el.closest('#bSave')) return saveBook();
   if (el.closest('#bDel')) { const b = bookOf(F.id); const ok = await ask({ title: 'Remover livro?', text: `${esc(b.title)} sai da estante. As tarefas continuam na agenda.`, buttons: [{ label: 'Remover', value: 1, style: 'danger' }, { label: 'Cancelar', value: 0, style: 'ghost' }] }); if (ok) { S.books = S.books.filter(x => x.id !== b.id); S.tasks.forEach(t => { if (t.book === b.id) t.book = ''; }); S.grade.forEach(g => { if (g.book === b.id) g.book = ''; }); persist(); closeSheet(); render(); } return; }
   const eb = el.closest('[data-editbook]'); if (eb) return openBookForm(bookOf(eb.dataset.editbook));
+  const gbk = el.closest('[data-gradebook]'); if (gbk) { S.settings.agendaMode = 'grade'; view = 'agenda'; persist(); window.scrollTo(0, 0); render(); openBlockForm(null, { days: [gradeDay], book: gbk.dataset.gradebook }); return; }
   const lb = el.closest('[data-logbook]'); if (lb) return openLog(lb.dataset.logbook);
-  const pb = el.closest('[data-planbook]'); if (pb) return openPlan(pb.dataset.planbook);
+  const pb = el.closest('[data-planbook]'); if (pb) { closeSheet(); return openPlan(pb.dataset.planbook); }
   const stp = el.closest('[data-step]'); if (stp) { const i = $('#lPage'); i.value = Math.max(0, (parseInt(i.value) || 0) + +stp.dataset.step); updLog(); return; }
   if (el.closest('#lSave')) return saveLog();
   if (el.closest('#pSave')) return savePlan();
@@ -1554,11 +1566,35 @@ document.addEventListener('change', e => {
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { timerTick(); checkReminders(); render(); } });
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
 
+/* ---------------- estante inicial (livros do Matheus) ---------------- */
+const SEED_BOOKS = { id: 'estante-2026-11', books: [
+  { title: 'Princípios de Bioquímica de Lehninger', short: 'Lehninger', author: 'David L. Nelson e Michael M. Cox', ed: '6ª ed. · Artmed · 2014', pages: 1328, color: '#e5484d' },
+  { title: 'Prática da Reabilitação Musculoesquelética', short: 'Magee', author: 'David J. Magee, James E. Zachazewski e William S. Quillen', ed: 'Manole · 2013', pages: 818, color: '#14b8a6' },
+  { title: 'Fundamentos do Treinamento de Força Muscular', short: 'Fleck & Kraemer', author: 'Steven J. Fleck e William J. Kraemer', ed: '4ª ed. · Artmed · 2017', pages: 472, color: '#f59e0b' },
+  { title: 'Guyton & Hall · Tratado de Fisiologia Médica', short: 'Guyton', author: 'John E. Hall e Michael E. Hall', ed: '14ª ed. · GEN Guanabara Koogan · 2021', pages: 1120, color: '#6366f1' },
+  { title: 'Biomecânica Básica', short: 'Susan Hall', author: 'Susan J. Hall', ed: '8ª ed. · Guanabara Koogan · 2020', pages: 432, color: '#0ea5e9' },
+  { title: 'Periodização Esportiva: Modalidades Individuais e Coletivas', short: 'Periodização', author: 'Charles Ricardo Lopes e Jonato Prestes (org.)', ed: 'Manole · 2025', pages: 256, color: '#ec4899' },
+  { title: 'Biomecânica da Musculação e Dieta para Mulheres', short: 'Maia & Paes', author: 'Alexandre Maia e Santiago Paes', ed: '', pages: 288, color: '#84cc16' },
+  { title: 'Hipertrofia Muscular: Ciência e Prática', short: 'Schoenfeld', author: 'Brad Schoenfeld', ed: '2ª ed. · Manole · 2022', pages: 368, color: '#a855f7' },
+  { title: 'Fisiologia do Exercício: Teoria e Aplicação ao Condicionamento e ao Desempenho', short: 'Powers', author: 'Scott K. Powers, Edward T. Howley e John C. Quindry', ed: '12ª ed. · Manole · 2025', pages: 720, color: '#10b981' },
+] };
+function seedBooks() {
+  S.seeds = S.seeds || [];
+  if (S.seeds.includes(SEED_BOOKS.id)) return;
+  const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 24);
+  const have = new Set(S.books.map(b => norm(b.title)));
+  let n = 0;
+  SEED_BOOKS.books.forEach(b => { if (!have.has(norm(b.title))) { S.books.push({ id: uid(), ...b, page: 0, goal: '', createdAt: Date.now() + n }); n++; } });
+  S.seeds.push(SEED_BOOKS.id);
+  persist();
+}
+
 /* ---------------- início ---------------- */
 (async function init() {
   await DB.open();
   const saved = await DB.get('state');
   if (saved) { S = Object.assign(DEFAULTS(), saved); S.settings = Object.assign(DEFAULTS().settings, saved.settings || {}); S.timer = Object.assign(DEFAULTS().timer, saved.timer || {}); }
+  seedBooks();
   applyTheme();
   if (S.timer.endAt && Date.now() >= S.timer.endAt) finishTimer();
   render();
