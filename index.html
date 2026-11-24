@@ -1578,7 +1578,11 @@ const SEED_BOOKS = { id: 'estante-2026-11', books: [
   { title: 'Hipertrofia Muscular: Ciência e Prática', short: 'Schoenfeld', author: 'Brad Schoenfeld', ed: '2ª ed. · Manole · 2022', pages: 368, color: '#a855f7' },
   { title: 'Fisiologia do Exercício: Teoria e Aplicação ao Condicionamento e ao Desempenho', short: 'Powers', author: 'Scott K. Powers, Edward T. Howley e John C. Quindry', ed: '12ª ed. · Manole · 2025', pages: 720, color: '#10b981' },
 ] };
-function seedBooks() {
+const SEED_NEUMANN = { id: 'neumann-2026-11', books: [
+  { title: 'Cinesiologia do Aparelho Musculoesquelético: Fundamentos para Reabilitação', short: 'Neumann', author: 'Donald A. Neumann', ed: '3ª ed. · GEN Guanabara Koogan · 2018', pages: 776, color: '#334155' },
+] };
+function seedBooks() { [SEED_BOOKS, SEED_NEUMANN].forEach(seedSet); }
+function seedSet(SEED_BOOKS) {
   S.seeds = S.seeds || [];
   if (S.seeds.includes(SEED_BOOKS.id)) return;
   const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 24);
