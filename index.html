@@ -341,6 +341,35 @@ textarea.inp{resize:none;min-height:84px;line-height:1.4}
 .tag.live:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.2s infinite}
 @keyframes blink{50%{opacity:.15}}
 
+/* ---------- anotações ---------- */
+.t-memo{margin-top:8px;font-size:13px;line-height:1.4;background:color-mix(in srgb,#f59e0b 15%,transparent);color:color-mix(in srgb,#b45309 85%,var(--ink));border-radius:10px;padding:6px 9px;font-weight:600}
+.t-note{margin-top:6px;font-size:13px;line-height:1.4;color:var(--ink2);background:color-mix(in srgb,var(--ink) 5%,transparent);border-radius:10px;padding:6px 9px;white-space:pre-line;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.task.done .t-note{text-decoration:none}
+.memo-list{padding:6px 14px}
+.memo{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.memo:last-child{border-bottom:0}
+.memo .mchk{width:26px;height:26px;border-radius:8px;border:2px solid #f59e0b;flex:none;margin-top:1px;display:grid;place-items:center}
+.memo .mchk svg{width:15px;height:15px;opacity:0;color:#fff}
+.memo .mchk:active{background:#f59e0b}
+.memo b{font-size:13px;color:color-mix(in srgb,#b45309 80%,var(--ink));text-transform:uppercase;letter-spacing:.5px}
+.memo p{margin:2px 0 2px;font-size:15px;line-height:1.4;font-weight:550}
+.memo small{color:var(--muted);font-size:12px}
+.memo-box{background:color-mix(in srgb,#f59e0b 12%,transparent);border-radius:16px;padding:6px 12px}
+.mrow{display:flex;gap:10px;align-items:flex-start;padding:8px 0;font-size:15px;line-height:1.4;font-weight:550;cursor:pointer}
+.mrow input{width:20px;height:20px;accent-color:#f59e0b;flex:none;margin-top:2px}
+.mrow small{color:var(--muted);font-weight:500;font-size:12px;margin-left:4px}
+.hitem{--c:var(--accent);background:var(--solid);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.hhead{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.hhead b{font-size:15px}
+.hhead small{color:var(--muted);font-size:12px;white-space:nowrap}
+.hitem .hl{font-size:14px;line-height:1.45;color:var(--ink2);margin-top:6px;white-space:pre-line}
+.hitem .hn{font-size:13px;margin-top:6px;color:color-mix(in srgb,#b45309 85%,var(--ink));font-weight:600}
+.rv{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.rv:last-child{border-bottom:0}
+.rv .tx{flex:1;min-width:0;font-weight:600;font-size:15px;line-height:1.3}
+.rv .tx small{display:block;color:var(--muted);font-weight:500;font-size:12px}
+.top-btns{display:flex;gap:8px}
+
 /* ---------- settings ---------- */
 .set-group{background:var(--solid);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
 .set-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);width:100%;text-align:left}
@@ -431,6 +460,7 @@ const I = {
   reset: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
   skip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 10 8-10 8z"/><path d="M19 5v14"/></svg>',
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>',
   clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
 };
 
@@ -458,8 +488,8 @@ const DB = {
 };
 
 const DEFAULTS = () => ({
-  v: 1, tasks: [], books: [], sessions: [], readLog: [], notified: {}, grade: [], gradeDirty: false, gradeApplied: null, gradeSeq: 0, seeds: [],
-  settings: { name: 'Matheus', theme: 'light', vacStart: '', vacEnd: '', remind: 15, calDefault: true, notif: false, focus: 25, brk: 5, installHidden: false, vacHidden: false },
+  v: 1, tasks: [], books: [], sessions: [], readLog: [], notified: {}, grade: [], gradeDirty: false, gradeApplied: null, gradeSeq: 0, seeds: [], memos: [],
+  settings: { name: 'Matheus', theme: 'light', vacStart: '', vacEnd: '', remind: 15, calDefault: true, notif: false, focus: 25, brk: 5, installHidden: false, vacHidden: false, askNote: true },
   timer: { mode: 'focus', total: 1500, remaining: 1500, endAt: null, ref: '' }
 });
 let S = DEFAULTS();
@@ -476,6 +506,11 @@ let F = null; // form atual
 const typeOf = id => TYPES.find(t => t.id === id) || TYPES[0];
 const bookOf = id => S.books.find(b => b.id === id);
 const bookName = bk => (bk && (bk.short || bk.title)) || '';
+const normKey = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const keyOf = t => t.book ? 'b:' + t.book : 't:' + (t.type || '') + ':' + normKey(t.title);
+const memoLabel = t => t.book ? bookName(bookOf(t.book)) : t.title;
+const openMemos = key => (S.memos || []).filter(m => m.open && (!key || m.key === key));
+const RATE = { '3': '🔥 Ótimo', '2': '🙂 Bom', '1': '😐 Fraco' };
 const colorOf = t => (t.book && bookOf(t.book)?.color) || typeOf(t.type).color;
 const startOf = t => { const d = parseYmd(t.date); if (t.time) { const [h, m] = t.time.split(':').map(Number); d.setHours(h, m, 0, 0); } else d.setHours(23, 59, 0, 0); return d; };
 const sortTasks = arr => arr.sort((a, b) => a.date.localeCompare(b.date) || ((a.time || '99') .localeCompare(b.time || '99')) || a.createdAt - b.createdAt);
@@ -528,6 +563,7 @@ function taskCard(t, opts = {}) {
     <div class="t-body">
       <div class="t-title">${esc(t.title)}</div>
       ${t.desc ? `<div class="t-desc">${esc(t.desc)}</div>` : ''}
+      ${(() => { if (t.done) return (t.note || t.page) ? `<div class="t-note">📝 ${t.page ? `pág. ${t.page}` : ''}${t.page && t.note ? ' · ' : ''}${esc(t.note || '')}</div>` : ''; const ms = openMemos(keyOf(t)); return ms.length ? `<div class="t-memo">📌 ${esc(ms[ms.length - 1].text)}${ms.length > 1 ? ` (+${ms.length - 1})` : ''}</div>` : ''; })()}
       <div class="t-meta">
         ${live ? '<span class="tag live">Agora</span>' : ''}
         ${opts.showDate ? `<span class="tag">${relDay(t.date)}</span>` : ''}
@@ -587,7 +623,7 @@ function viewHoje() {
   return `
   <div class="top">
     <div><h1>${greet},<br><em>${esc(S.settings.name || 'você')}</em></h1><div class="sub">${now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</div></div>
-    <button class="iconbtn" data-act="settings" aria-label="Ajustes">${I.gear}</button>
+    <div class="top-btns"><button class="iconbtn" data-act="history" aria-label="Anotações">${I.note}</button><button class="iconbtn" data-act="settings" aria-label="Ajustes">${I.gear}</button></div>
   </div>
   ${dayStrip()}
   <div class="hero">
@@ -604,6 +640,9 @@ function viewHoje() {
   </div>
   ${install}
   ${vac ? `<div style="margin-top:14px">${vac}</div>` : ''}
+  ${(() => { const lateT = list.filter(x => !x.done && x.time && startOf(x).getTime() + (x.dur || 0) * 60000 < Date.now()); return h >= 19 && lateT.length ? `<div class="banner"><span style="font-size:24px">🌙</span><div><b>Fechar o dia</b><br>${lateT.length} ${lateT.length === 1 ? 'tarefa de hoje ficou' : 'tarefas de hoje ficaram'} sem marcar. Revise antes de dormir.</div><button class="btn sm primary" data-act="review" style="margin-left:auto">Revisar</button></div>` : ''; })()}
+  ${(() => { const ms = openMemos(); return ms.length ? `<div class="section-h"><h3 style="color:#d97706">📌 Para não esquecer · ${ms.length}</h3><button class="link" data-act="history">Histórico</button></div>
+  <div class="card memo-list">${ms.slice().reverse().map(m => `<div class="memo"><button class="mchk" data-memo="${m.id}" aria-label="Resolvido">${I.check}</button><div><b>${esc(m.label)}</b><p>${esc(m.text)}</p><small>anotado ${relDay(m.date).toLowerCase()}</small></div></div>`).join('')}</div>` : ''; })()}
 
   ${late.length ? `<div class="section-h"><h3 style="color:var(--danger)">Atrasadas · ${late.length}</h3><button class="link" data-act="moveLate">Trazer para hoje</button></div>
   <div class="list">${sortTasks(late).map(x => taskCard(x, { showDate: true })).join('')}</div>` : ''}
@@ -963,7 +1002,8 @@ function viewLivros() {
         </div>
       </div>
       <div class="b-goal">⏱️ <b>${hLabel(mRead)}</b> de leitura · ${mWeek ? `🏫 <b>${durLabel(mWeek)}</b> por semana na grade` : 'ainda fora da grade'}${st.goal ? `<br>${st.goal}` : ''}</div>
-      <div class="b-actions"><button class="btn sm" data-logbook="${b.id}">📈 Onde parei</button><button class="btn sm primary" data-gradebook="${b.id}">🏫 Pôr na grade</button></div>
+      ${(() => { const last = historyEntries(b.id).find(t => t.note || t.page); const ms = openMemos('b:' + b.id); return (last ? `<div class="t-note" style="margin-top:8px">📝 ${last.page ? `pág. ${last.page} · ` : ''}${esc(last.note || 'sem observação')}</div>` : '') + (ms.length ? `<div class="t-memo">📌 ${esc(ms[ms.length - 1].text)}</div>` : ''); })()}
+      <div class="b-actions"><button class="btn sm" data-logbook="${b.id}">📖 Diário</button><button class="btn sm primary" data-gradebook="${b.id}">🏫 Pôr na grade</button></div>
     </div>`;
   }).join('')}</div>`
     : `<div class="card empty"><div class="em">📚</div><b>Adicione os livros que você comprou</b><p>Depois é só colocar cada um na grade semanal, nos horários que você quiser.</p><button class="btn primary" data-act="newBook">${I.plus} Adicionar livro</button></div>`}
@@ -1112,6 +1152,9 @@ function renderTaskForm() {
         <div class="hint" id="repCount"></div>
       </div></div>`}
     <div class="field"><div class="switch-row" data-toggle="cal"><div class="txt">🔒 Alerta na tela bloqueada<small>Adiciona ao Calendário do iPhone com aviso${f.edit ? ' (envia agora ao salvar)' : ''}</small></div><div class="sw ${f.cal ? 'on' : ''}"></div></div></div>
+    ${(() => { if (!f.edit) return ''; const t = S.tasks.find(x => x.id === f.id); if (!t) return ''; const ms = t.done ? [] : openMemos(keyOf(t)); const mine = (S.memos || []).find(m => m.from === t.id);
+      return (ms.length ? `<div class="field"><label>📌 Para lembrar</label><div class="memo-box">${ms.map(m => `<div class="mrow">${esc(m.text)}<small>${relDay(m.date).toLowerCase()}</small></div>`).join('')}</div></div>` : '')
+        + (t.done ? `<div class="field"><label>📝 Sua anotação</label><div class="t-note" style="-webkit-line-clamp:unset">${t.page ? `pág. ${t.page}\n` : ''}${esc(t.note || 'Sem observações')}${mine ? `\n📌 ${esc(mine.text)}` : ''}</div><button class="btn sm block" style="margin-top:8px" data-fa="note">✏️ Editar anotação</button></div>` : ''); })()}
     <button class="btn primary block" id="fSave">${f.edit ? 'Salvar alterações' : 'Salvar tarefa'}</button>
     ${f.edit ? `<div class="actions-grid">
       <button class="btn sm" data-fa="focus">🎯 Iniciar foco</button>
@@ -1159,26 +1202,119 @@ function saveTaskForm() {
 const slug = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'tarefa';
 
 /* ---------------- ações de tarefa ---------------- */
-function toggleDone(id, el) {
-  const t = S.tasks.find(x => x.id === id); if (!t) return;
-  t.done = !t.done; t.doneAt = t.done ? Date.now() : null;
+function setDone(t, done, skipAutoPage) {
+  t.done = done; t.doneAt = done ? Date.now() : null;
   const b = bookOf(t.book);
-  if (b && t.pageTo) {
-    if (t.done && t.pageTo > b.page) { S.readLog.push({ date: today(), book: b.id, pages: t.pageTo - b.page, task: t.id }); t._prevPage = b.page; b.page = Math.min(b.pages, t.pageTo); }
-    else if (!t.done && t._prevPage != null && b.page === Math.min(b.pages, t.pageTo)) { S.readLog = S.readLog.filter(r => r.task !== t.id); b.page = t._prevPage; delete t._prevPage; }
+  if (b) {
+    if (done && !skipAutoPage && t.pageTo && t.pageTo > b.page) { t._prevPage = b.page; S.readLog.push({ date: today(), book: b.id, pages: t.pageTo - b.page, task: t.id }); b.page = Math.min(b.pages, t.pageTo); t.page = b.page; }
+    else if (!done && t._prevPage != null) { S.readLog = S.readLog.filter(r => r.task !== t.id); b.page = t._prevPage; delete t._prevPage; delete t.page; }
   }
-  vib(t.done ? 18 : 8);
-  if (el) { el.classList.add('pop'); }
-  persist();
-  setTimeout(() => {
-    render();
-    if (t.done) {
-      const td = tasksOn(today());
-      if (t.date === today() && td.length > 1 && td.every(x => x.done)) { confetti(); toast('Dia concluído! Você mandou bem 🎉'); }
-      else toast('Concluída ✓', { label: 'Desfazer', fn: () => toggleDone(id) });
-    }
-  }, el ? 220 : 0);
+  if (!done) (S.memos || []).forEach(m => { if (m.by === t.id) { m.open = true; delete m.by; delete m.resolvedAt; } });
 }
+function celebrate(t, quick) {
+  const td = tasksOn(today());
+  if (t.date === today() && td.length > 1 && td.every(x => x.done)) { confetti(); toast('Dia concluído! Você mandou bem 🎉'); }
+  else if (quick) toast('Concluída ✓', { label: '📝 Anotar', fn: () => openDoneSheet(t) });
+  else toast('Concluída ✓', { label: 'Desfazer', fn: () => toggleDone(t.id) });
+}
+function toggleDone(id, el, quick) {
+  const t = S.tasks.find(x => x.id === id); if (!t) return;
+  if (!t.done && !quick && S.settings.askNote !== false) { openDoneSheet(t); return; }
+  setDone(t, !t.done);
+  vib(t.done ? 18 : 8);
+  if (el) el.classList.add('pop');
+  persist();
+  setTimeout(() => { render(); if (t.done) celebrate(t, quick); }, el ? 220 : 0);
+}
+function openDoneSheet(t) {
+  const editing = t.done, bk = bookOf(t.book);
+  const memos = openMemos(keyOf(t)).filter(m => m.from !== t.id);
+  const mine = (S.memos || []).find(m => m.from === t.id);
+  F = { kind: 'done', id: t.id, editing, rate: t.rate || '' };
+  const pageVal = t.page || Math.min(bk?.pages || 0, Math.max(bk?.page || 0, t.pageTo || 0));
+  openSheet(`
+    <h2>${editing ? '📝 Anotação' : 'Concluir ✓'}</h2>
+    <p class="hint" style="margin:-8px 4px 16px;font-size:15px"><b>${esc(t.title)}</b> · ${relDay(t.date)}${t.time ? ' · ' + t.time : ''}</p>
+    ${memos.length ? `<div class="field"><label>📌 Você pediu para lembrar</label><div class="memo-box">${memos.map(m => `<label class="mrow"><input type="checkbox" data-resolve="${m.id}" checked><span>${esc(m.text)}<small>${relDay(m.date).toLowerCase()}</small></span></label>`).join('')}</div><div class="hint">Desmarque o que ainda não foi resolvido — continua aparecendo.</div></div>` : ''}
+    ${bk ? `<div class="field"><label>📖 Onde parei</label>
+      <div class="stepper"><button data-dstep="-5">−5</button><input class="inp" id="dPage" type="number" inputmode="numeric" value="${pageVal}"><button data-dstep="5">+5</button></div>
+      <div class="hint">${esc(bookName(bk))} · estava na pág. ${t._prevPage ?? bk.page} de ${bk.pages}</div></div>` : ''}
+    <div class="field"><label>📝 Observações</label><textarea class="inp" id="dNote" placeholder="${bk ? 'O que leu, ideias, dúvidas, o que achou…' : 'Como foi? O que ficou feito?'}">${esc(t.note || '')}</textarea></div>
+    <div class="field"><label>📌 Para a próxima vez</label><input class="inp" id="dNext" placeholder="${bk ? 'Ex.: começar pelo cap. 6, rever a figura 5.12' : 'Ex.: falar com o aluno João, ajustar a dieta da Ana'}" value="${esc(mine?.text || '')}" autocomplete="off">
+      <div class="hint">Fica em destaque ${bk ? 'na próxima leitura deste livro' : 'na próxima vez desta tarefa'} e em “Para não esquecer”, até você marcar como resolvido.</div></div>
+    ${editing ? '' : `<div class="field"><label>➕ Ficou algo pendente?</label><input class="inp" id="dPend" placeholder="Vira uma tarefa para amanhã" autocomplete="off"></div>`}
+    <div class="field"><label>Como rendeu?</label>${chipsHtml('rate', Object.entries(RATE).map(([v, l]) => ({ v, l })), F.rate)}</div>
+    <button class="btn primary block" id="dSave">${editing ? 'Salvar anotação' : '✓ Concluir'}</button>
+    ${editing ? '' : '<button class="btn ghost block" id="dQuick" style="margin-top:6px">Concluir sem anotar</button>'}
+  `);
+}
+function saveDone(quick) {
+  const t = S.tasks.find(x => x.id === F.id); if (!t) return closeSheet();
+  const bk = bookOf(t.book), wasDone = t.done;
+  let pageSet = false;
+  if (!quick) {
+    t.note = $('#dNote').value.trim(); t.rate = F.rate || '';
+    $$('[data-resolve]').forEach(c => { const m = S.memos.find(x => x.id === c.dataset.resolve); if (m && c.checked) { m.open = false; m.resolvedAt = Date.now(); m.by = t.id; } });
+    const next = $('#dNext').value.trim();
+    S.memos = S.memos || [];
+    const mine = S.memos.find(m => m.from === t.id);
+    if (next) { if (mine) mine.text = next; else S.memos.push({ id: uid(), key: keyOf(t), label: memoLabel(t), text: next, date: today(), from: t.id, open: true }); }
+    else if (mine) S.memos = S.memos.filter(m => m !== mine);
+    if (bk && $('#dPage')) {
+      const p = Math.min(bk.pages, Math.max(0, parseInt($('#dPage').value) || 0));
+      if (p !== bk.page) { if (t._prevPage == null) t._prevPage = bk.page; S.readLog.push({ date: today(), book: bk.id, pages: p - bk.page, task: t.id }); bk.page = p; }
+      t.page = p; pageSet = true;
+    }
+    const pend = $('#dPend')?.value.trim();
+    if (pend) S.tasks.push({ id: uid(), title: pend, desc: `Pendência de: ${t.title}`, date: addDays(today(), 1), time: '', dur: 30, type: t.type, book: t.book, remind: -1, done: false, doneAt: null, series: '', cal: false, createdAt: Date.now() });
+  }
+  if (!wasDone) setDone(t, true, pageSet);
+  vib(18); persist(); closeSheet(); render();
+  if (!wasDone) celebrate(t, false); else toast('Anotação salva 📝');
+  if (bk && bk.page >= bk.pages && pageSet) { confetti(); toast('Livro concluído! 🏆'); }
+}
+function resolveMemo(id) {
+  const m = (S.memos || []).find(x => x.id === id); if (!m) return;
+  m.open = false; m.resolvedAt = Date.now(); vib(12); persist(); render();
+  toast('Resolvido ✓', { label: 'Desfazer', fn: () => { m.open = true; delete m.resolvedAt; persist(); render(); } });
+}
+function historyEntries(filter) {
+  return S.tasks.filter(t => t.done && (t.note || t.page || t.rate || (S.memos || []).some(m => m.from === t.id)))
+    .filter(t => filter === 'all' ? true : filter === 'livros' ? !!t.book : filter === 'rotina' ? !t.book && typeOf(t.type).life : t.book === filter)
+    .sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0)).slice(0, 120);
+}
+function historyItem(t) {
+  const memo = (S.memos || []).find(m => m.from === t.id), d = new Date(t.doneAt || Date.now());
+  return `<div class="hitem" style="--c:${colorOf(t)}" data-hopen="${t.id}">
+    <div class="hhead"><b>${esc(t.book ? bookName(bookOf(t.book)) : t.title)}</b><small>${relDay(ymd(d))} · ${pad(d.getHours())}:${pad(d.getMinutes())}</small></div>
+    ${t.book || t.rate ? `<div class="t-meta">${t.page ? `<span class="tag">📖 pág. ${t.page}</span>` : ''}${t.time ? `<span class="tag">${I.clock}${durLabel(t.dur || 0)}</span>` : ''}${t.rate ? `<span class="tag">${RATE[t.rate]}</span>` : ''}</div>` : ''}
+    ${t.note ? `<div class="hl">${esc(t.note)}</div>` : ''}
+    ${memo ? `<div class="hn">📌 ${esc(memo.text)}${memo.open ? '' : ' ✓'}</div>` : ''}
+  </div>`;
+}
+function openHistory(filter = 'all') {
+  F = { kind: 'history', filter };
+  const list = historyEntries(filter);
+  const opts = [{ v: 'all', l: 'Tudo' }, { v: 'livros', l: '📚 Livros' }, { v: 'rotina', l: '⚡ Rotina' }];
+  openSheet(`
+    <h2>📝 Anotações</h2>
+    <div class="chips" style="margin-bottom:14px">${opts.map(o => `<button class="chip ${filter === o.v ? 'on' : ''}" data-hist="${o.v}">${o.l}</button>`).join('')}</div>
+    ${list.length ? list.map(historyItem).join('') : '<div class="empty" style="padding:20px"><div class="em" style="font-size:34px">🗒️</div><b>Nada anotado ainda</b><p>Ao concluir uma tarefa, escreva onde parou e o que lembrar na próxima vez.</p></div>'}
+  `);
+}
+function openReview() {
+  const now = Date.now();
+  const late = tasksOn(today()).filter(x => !x.done && x.time && startOf(x).getTime() + (x.dur || 0) * 60000 < now);
+  if (!late.length) { closeSheet(); render(); toast('Dia fechado ✓'); return; }
+  F = { kind: 'review' };
+  openSheet(`
+    <h2>🌙 Fechar o dia</h2>
+    <p class="hint" style="margin:-6px 4px 14px;font-size:15px">O que ficou sem marcar hoje. Nada se perde: o que não fez vai para amanhã.</p>
+    <div class="card" style="padding:4px 14px">${late.map(t => `<div class="rv"><div class="tx">${esc(t.title)}<small>${t.time} · ${durLabel(t.dur || 0)}</small></div><button class="btn sm" data-rv="done:${t.id}">✓ Fiz</button><button class="btn sm" data-rv="next:${t.id}">⏭ Amanhã</button></div>`).join('')}</div>
+    <button class="btn primary block" style="margin-top:14px" data-rv="all">Passar todas para amanhã</button>
+  `);
+}
+
 async function deleteTask(id) {
   const t = S.tasks.find(x => x.id === id); if (!t) return;
   let mode = 'one';
@@ -1225,12 +1361,14 @@ function saveBook() {
 function openLog(id) {
   const b = bookOf(id); F = { kind: 'log', id };
   openSheet(`
-    <h2>Registrar leitura</h2>
+    <h2>${esc(bookName(b))}</h2>
     <p class="hint" style="margin:-6px 4px 16px;font-size:15px">${esc(b.title)} · estava na pág. <b>${b.page}</b> de ${b.pages}</p>
-    <div class="field"><label>Em que página você parou?</label>
-      <div class="stepper"><button data-step="-5">−5</button><input class="inp" id="lPage" type="number" inputmode="numeric" value="${Math.min(b.pages, b.page + 10)}"><button data-step="5">+5</button></div>
+    <div class="field"><label>Atualizar página</label>
+      <div class="stepper"><button data-step="-5">−5</button><input class="inp" id="lPage" type="number" inputmode="numeric" value="${b.page}"><button data-step="5">+5</button></div>
       <div class="hint" id="lInfo"></div></div>
-    <button class="btn primary block" id="lSave">Salvar progresso</button>
+    <button class="btn primary block" id="lSave">Salvar página</button>
+    <div class="section-h"><h3>📖 Diário de leitura</h3></div>
+    ${(() => { const L = historyEntries(id); return L.length ? L.map(historyItem).join('') : '<p class="hint">Ao concluir cada leitura, anote onde parou e o que lembrar — tudo aparece aqui.</p>'; })()}
   `);
   updLog();
 }
@@ -1317,6 +1455,7 @@ function openSettings() {
 
     <div class="field"><label>Backup</label>
       <div class="set-group">
+        <button class="set-item" data-sa="askNote"><span class="ic" style="background:#f59e0b">📝</span><span class="tx">Anotar ao concluir<small>${st.askNote !== false ? 'Ao marcar uma tarefa, abre: onde parei, observações e o que lembrar' : 'Desligado — marca direto'}</small></span><span class="val">${st.askNote !== false ? '✓' : ''}</span></button>
         <button class="set-item" data-sa="export"><span class="ic" style="background:#10b981">⬇️</span><span class="tx">Exportar backup<small>Salva tudo num arquivo .json</small></span></button>
         <label class="set-item" style="cursor:pointer"><span class="ic" style="background:#0ea5e9">⬆️</span><span class="tx">Importar backup<small>Restaura de um arquivo .json</small></span><input type="file" accept=".json,application/json" id="sImport" hidden></label>
         <button class="set-item" data-sa="wipe"><span class="ic" style="background:#334155">🧹</span><span class="tx" style="color:var(--danger)">Apagar todos os dados</span></button>
@@ -1456,7 +1595,7 @@ function endDrag() {
   if (Math.abs(d.dx) > 90) {
     d.task.style.transform = `translateX(${d.dx > 0 ? 110 : -110}%)`; d.task.style.opacity = '0';
     if (!S.settings.swipeSeen) { S.settings.swipeSeen = true; persist(); }
-    setTimeout(() => d.dx > 0 ? toggleDone(d.id) : postpone(d.id), 220);
+    setTimeout(() => d.dx > 0 ? toggleDone(d.id, null, true) : postpone(d.id), 220);
   } else { d.task.style.transform = ''; setTimeout(() => d.wrap.classList.remove('to-r', 'to-l'), 300); }
 }
 document.addEventListener('pointerup', endDrag);
@@ -1490,6 +1629,13 @@ document.addEventListener('click', async e => {
   if (el.closest('#aSave')) return saveApply();
   if (el.closest('#overlay')) { closeSheet(); return; }
 
+  const mc = el.closest('[data-memo]'); if (mc) { e.stopPropagation(); resolveMemo(mc.dataset.memo); return; }
+  if (el.closest('#dSave')) return saveDone(false);
+  if (el.closest('#dQuick')) return saveDone(true);
+  const ds = el.closest('[data-dstep]'); if (ds) { const i = $('#dPage'); i.value = Math.max(0, (parseInt(i.value) || 0) + +ds.dataset.dstep); return; }
+  const hs = el.closest('[data-hist]'); if (hs) return openHistory(hs.dataset.hist);
+  const ho = el.closest('[data-hopen]'); if (ho) { const t = S.tasks.find(x => x.id === ho.dataset.hopen); if (t) openDoneSheet(t); return; }
+  const rv = el.closest('[data-rv]'); if (rv) { const [a, id] = rv.dataset.rv.split(':'); if (a === 'all') { tasksOn(today()).filter(x => !x.done && x.time && startOf(x).getTime() + (x.dur || 0) * 60000 < Date.now()).forEach(t => { t.date = addDays(today(), 1); delete S.notified[t.id]; }); persist(); closeSheet(); render(); toast('Tudo para amanhã ⏭'); return; } const t = S.tasks.find(x => x.id === id); if (!t) return; if (a === 'done') return openDoneSheet(t); t.date = addDays(today(), 1); delete S.notified[t.id]; persist(); return openReview(); }
   const chk = el.closest('[data-check]'); if (chk) { e.stopPropagation(); toggleDone(chk.dataset.check, chk); return; }
   const op = el.closest('[data-open]'); if (op && !el.closest('#sheet')) { openTaskForm(S.tasks.find(t => t.id === op.dataset.open)); return; }
   const fo = el.closest('[data-focus]'); if (fo) { const t = S.tasks.find(x => x.id === fo.dataset.focus); if (t) { S.timer.ref = t.book || ''; } view = 'foco'; render(); return; }
@@ -1525,6 +1671,7 @@ document.addEventListener('click', async e => {
   if (fa && F) {
     const t = S.tasks.find(x => x.id === F.id), a = fa.dataset.fa;
     if (a === 'del') return deleteTask(t.id);
+    if (a === 'note') return openDoneSheet(t);
     if (a === 'tomorrow') { t.date = addDays(t.date < today() ? today() : t.date, 1); delete S.notified[t.id]; persist(); closeSheet(); render(); toast(`Adiada para ${relDay(t.date).toLowerCase()}${t.cal ? ' — atualize no Calendário' : ''}`); return; }
     if (a === 'dup') { const c = { ...t, id: uid(), done: false, doneAt: null, series: '', cal: false, createdAt: Date.now() }; S.tasks.push(c); persist(); closeSheet(); render(); toast('Tarefa duplicada'); return; }
     if (a === 'focus') { S.timer.ref = t.book || ''; closeSheet(); view = 'foco'; render(); return; }
@@ -1552,6 +1699,7 @@ document.addEventListener('click', async e => {
   if (sa) {
     const a = sa.dataset.sa;
     if (a === 'notif') return enableNotif();
+    if (a === 'askNote') { S.settings.askNote = S.settings.askNote === false; persist(); return openSettings(); }
     if (a === 'calAll') {
       const pend = sortTasks(S.tasks.filter(t => !t.done && t.date >= today()));
       if (!pend.length) { toast('Nenhuma tarefa pendente'); return; }
@@ -1576,6 +1724,8 @@ document.addEventListener('click', async e => {
     const a = act.dataset.act;
     if (a === 'new') openTaskForm(null);
     else if (a === 'settings') openSettings();
+    else if (a === 'history') openHistory();
+    else if (a === 'review') openReview();
     else if (a === 'hideInstall') { S.settings.installHidden = true; persist(); render(); }
     else if (a === 'newBook') openBookForm(null);
     else if (a === 'mprev') { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); render(); }
