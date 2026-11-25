@@ -317,6 +317,7 @@ textarea.inp{resize:none;min-height:84px;line-height:1.4}
 .gcol.today{background:color-mix(in srgb,var(--accent) 6%,transparent)}
 .gblk{position:absolute;left:1px;right:1px;border-radius:9px;background:color-mix(in srgb,var(--c) 15%,var(--solid));border:1px solid color-mix(in srgb,var(--c) 25%,transparent);border-left:3px solid var(--c);padding:4px 4px 4px 5px;text-align:left;overflow:hidden;display:flex;flex-direction:column;gap:2px;transition:transform .15s;animation:rise .4s cubic-bezier(.2,.8,.3,1) both}
 .gblk:active{transform:scale(.95)}
+.gblk.ghost{opacity:.28;pointer-events:none;filter:saturate(.6);border-style:dashed;animation:none}
 .gblk.live{box-shadow:0 0 0 2px var(--c),0 6px 16px color-mix(in srgb,var(--c) 35%,transparent)}
 .gblk b{font-size:11px;line-height:1.15;font-weight:800;color:color-mix(in srgb,var(--c) 72%,var(--ink));white-space:nowrap;overflow:hidden;text-overflow:clip}
 .glegend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:12px;font-size:12px;color:var(--ink2);font-weight:600}
@@ -393,8 +394,19 @@ const TYPES = [
   { id: 'revisao', label: 'Revisão', emoji: '🔁', color: '#a855f7' },
   { id: 'resumo', label: 'Resumo', emoji: '✍️', color: '#0ea5e9' },
   { id: 'questoes', label: 'Questões', emoji: '🧠', color: '#ec4899' },
-  { id: 'faculdade', label: 'Faculdade', emoji: '🎓', color: '#10b981' },
-  { id: 'pessoal', label: 'Pessoal', emoji: '⭐', color: '#f59e0b' },
+  { id: 'faculdade', label: 'Faculdade', emoji: '🎓', color: '#10b981', life: true },
+  { id: 'pessoal', label: 'Pessoal', emoji: '⭐', color: '#f59e0b', life: true },
+  { id: 'consultoria', label: 'Consultoria', emoji: '💼', color: '#0891b2', life: true },
+  { id: 'treino', label: 'Treino', emoji: '🏋️', color: '#ef4444', life: true },
+  { id: 'alimentacao', label: 'Refeição', emoji: '🍽️', color: '#eab308', life: true },
+  { id: 'descanso', label: 'Descanso', emoji: '🌙', color: '#64748b', life: true },
+];
+const STUDY_TYPES = TYPES.filter(t => ['leitura', 'revisao', 'resumo', 'questoes', 'faculdade'].includes(t.id));
+const LIFE_TYPES = ['consultoria', 'treino', 'faculdade', 'alimentacao', 'pessoal', 'descanso'].map(id => TYPES.find(t => t.id === id));
+const LIFE_QUICK = [
+  { t: 'Trabalhar na consultoria', type: 'consultoria' }, { t: 'Responder alunos', type: 'consultoria' }, { t: 'Montar treinos e dietas', type: 'consultoria' },
+  { t: 'Gravar conteúdo', type: 'consultoria' }, { t: 'Treino', type: 'treino' }, { t: 'Cardio', type: 'treino' },
+  { t: 'Faculdade', type: 'faculdade' }, { t: 'Almoço', type: 'alimentacao' }, { t: 'Descanso', type: 'descanso' },
 ];
 const BOOK_COLORS = ['#6366f1', '#a855f7', '#0ea5e9', '#10b981', '#ec4899', '#f59e0b', '#e5484d', '#14b8a6', '#84cc16', '#334155'];
 const DURS = [15, 30, 45, 60, 90, 120];
@@ -522,7 +534,7 @@ function taskCard(t, opts = {}) {
         <span class="tag c">${b ? '📘 ' + esc(bookName(b)) : ty.emoji + ' ' + ty.label}</span>
         ${t.remind >= 0 && t.time && !t.done ? `<span class="tag">${I.bell}${remindLabel(t.remind)}</span>` : ''}
         ${t.cal ? `<span class="tag">${I.cal}iPhone</span>` : ''}
-        ${t.grade ? `<span class="tag">🏫 até ${t.gEnd || ''}</span>` : t.series ? `<span class="tag">${I.rep}</span>` : ''}
+        ${t.grade ? `<span class="tag">${['leitura', 'revisao', 'resumo', 'questoes'].includes(t.type) ? '🏫' : '⚡'} até ${t.gEnd || ''}</span>` : t.series ? `<span class="tag">${I.rep}</span>` : ''}
       </div>
     </div>
     <button class="check" data-check="${t.id}" aria-label="Concluir">${I.check}</button>
@@ -596,7 +608,7 @@ function viewHoje() {
   ${late.length ? `<div class="section-h"><h3 style="color:var(--danger)">Atrasadas · ${late.length}</h3><button class="link" data-act="moveLate">Trazer para hoje</button></div>
   <div class="list">${sortTasks(late).map(x => taskCard(x, { showDate: true })).join('')}</div>` : ''}
 
-  ${S.gradeDirty ? `<div class="banner"><span style="font-size:24px">🏫</span><div><b>Sua grade semanal mudou</b><br>Leve as aulas para a agenda para receber os lembretes.</div><button class="btn sm primary" data-ga="apply" style="margin-left:auto">Aplicar</button></div>` : ''}
+  ${S.gradeDirty ? `<div class="banner"><span style="font-size:24px">🏫</span><div><b>Sua semana mudou</b><br>Aplique a grade e a rotina na agenda para receber os lembretes.</div><button class="btn sm primary" data-ga="apply" style="margin-left:auto">Aplicar</button></div>` : ''}
   <div class="section-h"><h3>Hoje</h3><button class="link" data-act="new">+ Adicionar</button></div>
   ${list.length ? `<div class="list">${list.filter(x => !x.done).map(x => taskCard(x)).join('')}</div>${!S.settings.swipeSeen && list.some(x => !x.done) ? '<p class="swipe-hint">Dica: arraste para a direita para concluir · para a esquerda para adiar</p>' : ''}
      ${done ? `<div class="section-h"><h3>Concluídas · ${done}</h3></div><div class="list">${list.filter(x => x.done).map(x => taskCard(x)).join('')}</div>` : ''}`
@@ -621,11 +633,13 @@ function dayStrip() {
 
 function viewAgenda() {
   const mode = S.settings.agendaMode || 'mes';
+  if (mode !== 'mes') gradeKind = mode === 'rotina' ? 'life' : 'study';
+  const sub = { mes: 'Planeje a semana com calma', grade: 'Seus horários de leitura, como na escola', rotina: 'Consultoria, treino e o resto da vida' }[mode];
   return `
-  <div class="top"><div><h1>Agenda</h1><div class="sub">${mode === 'grade' ? 'Sua rotina da semana, como na escola' : 'Planeje a semana com calma'}</div></div>
+  <div class="top"><div><h1>Agenda</h1><div class="sub">${sub}</div></div>
     <button class="iconbtn" data-act="settings">${I.gear}</button></div>
-  <div class="seg wide"><button data-amode="mes" class="${mode === 'mes' ? 'on' : ''}">📅 Calendário</button><button data-amode="grade" class="${mode === 'grade' ? 'on' : ''}">🏫 Grade semanal</button></div>
-  ${mode === 'grade' ? viewGrade() : viewMonth()}`;
+  <div class="seg wide"><button data-amode="mes" class="${mode === 'mes' ? 'on' : ''}">📅 Mês</button><button data-amode="grade" class="${mode === 'grade' ? 'on' : ''}">📚 Estudos</button><button data-amode="rotina" class="${mode === 'rotina' ? 'on' : ''}">⚡ Rotina</button></div>
+  ${mode === 'mes' ? viewMonth() : viewGrade()}`;
 }
 
 /* ---------------- grade semanal ---------------- */
@@ -635,29 +649,39 @@ const WEEK = [1, 2, 3, 4, 5, 6, 0];
 const toMin = s => { const [h, m] = (s || '0:0').split(':').map(Number); return h * 60 + m; };
 const fromMin = m => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
 const blockColor = b => (b.book && bookOf(b.book)?.color) || typeOf(b.type).color;
-const blocksOn = d => S.grade.filter(b => b.day === d).sort((a, b) => toMin(a.start) - toMin(b.start));
+let gradeKind = 'study';
+const kindOf = b => b.kind || 'study';
+const blocksOn = (d, kind = gradeKind) => S.grade.filter(b => b.day === d && (kind === 'all' || kindOf(b) === kind)).sort((a, b) => toMin(a.start) - toMin(b.start));
+const gridLabel = b => kindOf(b) === 'life' ? `${typeOf(b.type).emoji} ${abbr(b.title)}` : abbr(blockShort(b));
 const abbr = s => { const w = (s || '').split(/\s+/).filter(x => x.length > 2)[0] || s || ''; return w.length <= 7 ? w : w.slice(0, 5) + '.'; };
 const blockShort = b => { const bk = bookOf(b.book); if (bk && (!b.title || b.title === `Ler ${bookName(bk)}` || b.title === `Ler ${bk.title}`)) return bk.short || bk.title.split(/\s+/).filter(w => w.length > 2).slice(0, 2).join(' ') || bk.title; return b.title; };
 const markGrade = () => { S.gradeDirty = S.grade.length > 0; };
 let gradeDay = new Date().getDay();
 
 function viewGrade() {
+  const kind = gradeKind, life = kind === 'life';
+  const U = life ? { one: 'bloco', many: 'blocos', add: 'Bloco' } : { one: 'aula', many: 'aulas', add: 'Aula' };
   const showWE = S.settings.gradeWeekend || S.grade.some(b => b.day === 0 || b.day === 6);
   const days = showWE ? WEEK : [1, 2, 3, 4, 5];
-  const all = S.grade;
+  const all = S.grade.filter(b => kindOf(b) === kind);
+  const showOther = S.settings.showOther !== false;
+  const other = showOther ? S.grade.filter(b => kindOf(b) !== kind) : [];
+  const span = [...all, ...other];
   const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes(), td = now.getDay();
-  const minS = all.length ? Math.min(...all.map(b => toMin(b.start))) : 7 * 60;
-  const maxE = all.length ? Math.max(...all.map(b => toMin(b.end))) : 12 * 60;
+  const minS = span.length ? Math.min(...span.map(b => toMin(b.start))) : 7 * 60;
+  const maxE = span.length ? Math.max(...span.map(b => toMin(b.end))) : 12 * 60;
   const h0 = Math.max(0, Math.min(7, Math.floor(minS / 60))), h1 = Math.min(24, Math.max(12, Math.ceil(maxE / 60)));
   const ppm = 1.1, H = (h1 - h0) * 60 * ppm;
   const weekMin = all.reduce((a, b) => a + toMin(b.end) - toMin(b.start), 0);
   const nBooks = new Set(all.map(b => b.book).filter(Boolean)).size;
+  const nTreino = all.filter(b => b.type === 'treino').length;
   const cols = days.map(d => {
-    const bl = blocksOn(d).map((b, i) => {
+    const ghosts = other.filter(b => b.day === d).map(b => { const s = toMin(b.start), e = toMin(b.end); return `<i class="gblk ghost" style="--c:${blockColor(b)};top:${(s - h0 * 60) * ppm}px;height:${Math.max(22, (e - s) * ppm - 3)}px"><b>${esc(gridLabel(b))}</b></i>`; }).join('');
+    const bl = ghosts + blocksOn(d).map((b, i) => {
       const s = toMin(b.start), e = toMin(b.end);
       const top = (s - h0 * 60) * ppm, h = Math.max(22, (e - s) * ppm - 3);
       const live = d === td && nowMin >= s && nowMin < e;
-      return `<button class="gblk ${live ? 'live' : ''}" data-gblock="${b.id}" style="--c:${blockColor(b)};top:${top}px;height:${h}px;animation-delay:${i * .04}s"><b>${esc(abbr(blockShort(b)))}</b>${h > 36 ? `<span>${b.start}</span>` : ''}${h > 52 ? `<span>${b.end}</span>` : ''}</button>`;
+      return `<button class="gblk ${live ? 'live' : ''}" data-gblock="${b.id}" style="--c:${blockColor(b)};top:${top}px;height:${h}px;animation-delay:${i * .04}s"><b>${esc(gridLabel(b))}</b>${h > 36 ? `<span>${b.start}</span>` : ''}${h > 52 ? `<span>${b.end}</span>` : ''}</button>`;
     }).join('');
     const nowLine = d === td && nowMin >= h0 * 60 && nowMin <= h1 * 60 ? `<i class="gnow" style="top:${(nowMin - h0 * 60) * ppm}px"></i>` : '';
     return `<div class="gcol ${d === td ? 'today' : ''}" data-gcol="${d}" data-h0="${h0}" data-ppm="${ppm}" style="height:${H}px">${bl}${nowLine}</div>`;
@@ -668,17 +692,20 @@ function viewGrade() {
     <div class="ghead" style="grid-template-columns:32px repeat(${days.length},1fr)"><span></span>${days.map(d => `<span class="${d === td ? 'on' : ''}">${WDL[d]}</span>`).join('')}</div>
     <div class="gbody"><div class="gtimes" style="height:${H}px">${hours.map(h => `<span style="top:${(h - h0) * 60 * ppm}px">${pad(h)}h</span>`).join('')}</div>
       <div class="gcols" style="grid-template-columns:repeat(${days.length},1fr);background:linear-gradient(var(--line2) 1px,transparent 1px) 0 0/100% ${60 * ppm}px">${cols}</div></div>
-    <div class="glegend">${[...new Map(all.map(b => [b.book || b.title, b])).values()].slice(0, 8).map(b => `<span><i class="dot" style="--c:${blockColor(b)}"></i>${esc(abbr(blockShort(b)))} = ${esc(blockShort(b))}</span>`).join('')}</div>
-    <div class="chips" style="margin-top:12px;justify-content:space-between;align-items:center">
+    <div class="glegend">${life
+      ? [...new Set(all.map(b => b.type))].map(id => typeOf(id)).map(ty => `<span><i class="dot" style="--c:${ty.color}"></i>${ty.emoji} ${ty.label}</span>`).join('')
+      : [...new Map(all.map(b => [b.book || b.title, b])).values()].slice(0, 10).map(b => `<span><i class="dot" style="--c:${blockColor(b)}"></i>${esc(abbr(blockShort(b)))} = ${esc(blockShort(b))}</span>`).join('')}</div>
+    <div class="chips" style="margin-top:12px;align-items:center">
       <button class="chip ${showWE ? 'on' : ''}" data-ga="weekend">${showWE ? '✓ ' : ''}Sáb e Dom</button>
-      <span class="hint" style="margin:0">Toque num espaço vazio para criar</span></div>
+      <button class="chip ${showOther ? 'on' : ''}" data-ga="other">${showOther ? '✓ ' : ''}Ver ${life ? 'estudos' : 'rotina'} ao fundo</button></div>
+    <p class="hint" style="margin:8px 0 0">Toque num espaço vazio da grade para criar ${life ? 'um bloco' : 'uma aula'}.</p>
   </div>`;
 
   // detalhe do dia
   const bl = blocksOn(gradeDay);
   let dayHtml = '';
   bl.forEach((b, i) => {
-    if (i) { const gap = toMin(b.start) - toMin(bl[i - 1].end); if (gap > 0) dayHtml += `<div class="gpause">☕ Pausa · ${durLabel(gap)} <span>${bl[i - 1].end}–${b.start}</span></div>`; else if (gap < 0) dayHtml += `<div class="gpause warn">⚠️ Horários sobrepostos</div>`; }
+    if (i) { const gap = toMin(b.start) - toMin(bl[i - 1].end); if (gap > 0) dayHtml += `<div class="gpause">${life ? '🕊️ Livre' : '☕ Pausa'} · ${durLabel(gap)} <span>${bl[i - 1].end}–${b.start}</span></div>`; else if (gap < 0) dayHtml += `<div class="gpause warn">⚠️ Horários sobrepostos</div>`; }
     const bk = bookOf(b.book), ty = typeOf(b.type), dur = toMin(b.end) - toMin(b.start);
     const live = gradeDay === td && nowMin >= toMin(b.start) && nowMin < toMin(b.end);
     dayHtml += `<div class="task gtask ${live ? 'now' : ''}" style="--c:${blockColor(b)}" data-gblock="${b.id}">
@@ -690,9 +717,15 @@ function viewGrade() {
   const dayMin = bl.reduce((a, b) => a + toMin(b.end) - toMin(b.start), 0);
 
   const status = S.gradeDirty
-    ? `<div class="banner" style="margin-top:0;margin-bottom:14px"><span style="font-size:24px">🔔</span><div><b>${S.gradeApplied ? 'Grade alterada' : 'Grade ainda não está na agenda'}</b><br>Aplique para gerar as tarefas e os lembretes.</div></div>`
-    : S.gradeApplied && all.length ? `<p class="hint" style="margin:-4px 4px 14px">✅ Na agenda de ${parseYmd(S.gradeApplied.start).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '')} a ${parseYmd(S.gradeApplied.end).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '')}</p>` : '';
+    ? `<div class="banner" style="margin-top:0;margin-bottom:14px"><span style="font-size:24px">🔔</span><div><b>${S.gradeApplied ? 'Sua semana mudou' : 'Ainda não está na agenda'}</b><br>Aplique para gerar as tarefas e os lembretes (estudos e rotina).</div></div>`
+    : S.gradeApplied && S.grade.length ? `<p class="hint" style="margin:-4px 4px 14px">✅ Na agenda de ${parseYmd(S.gradeApplied.start).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '')} a ${parseYmd(S.gradeApplied.end).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '')}</p>` : '';
 
+  if (!all.length && life) return `
+    ${status}
+    <div class="card empty"><div class="em">⚡</div><b>Organize sua rotina</b><p>Reserve horários fixos para o que não é leitura: <b>trabalhar na consultoria</b>, <b>treinar</b>, faculdade, refeições, descanso. Cada bloco vira tarefa com lembrete.</p>
+      <button class="btn primary block" data-ga="template">✨ Usar modelo: consultoria + treino</button>
+      <button class="btn block" style="margin-top:8px" data-ga="new">${I.plus} Criar do zero</button>
+      <p class="hint">O modelo cria Seg a Sex: consultoria 14h–17h e treino 18h–19h30. Você ajusta os horários depois.</p></div>`;
   if (!all.length) return `
     <div class="card empty"><div class="em">🏫</div><b>Monte sua grade como na escola</b><p>Defina os horários fixos da semana — por exemplo, <b>segunda, 7h às 8h30: Neumann</b>, pausa, <b>9h às 10h30: Haluch</b>. Depois é só aplicar na agenda e receber os lembretes.</p>
       <button class="btn primary block" data-ga="template">✨ Usar modelo: manhãs de leitura</button>
@@ -700,38 +733,40 @@ function viewGrade() {
       <p class="hint">O modelo cria Seg a Sex: 7h–8h30 e 9h–10h30${S.books.length ? ', já com seus livros' : ''}. Você ajusta depois.</p></div>`;
 
   return `
-  <div class="stat-row" style="margin-bottom:14px"><div class="stat"><b>${all.length}</b><span>aulas na semana</span></div><div class="stat"><b>${durLabel(weekMin).replace(' min', 'm')}</b><span>de estudo/semana</span></div><div class="stat"><b>${nBooks}</b><span>${nBooks === 1 ? 'livro' : 'livros'} na grade</span></div></div>
+  <div class="stat-row" style="margin-bottom:14px"><div class="stat"><b>${all.length}</b><span>${U.many} na semana</span></div><div class="stat"><b>${durLabel(weekMin).replace(' min', 'm')}</b><span>${life ? 'de rotina' : 'de estudo'}/semana</span></div>${life ? `<div class="stat"><b>${nTreino}</b><span>${nTreino === 1 ? 'treino' : 'treinos'}/semana</span></div>` : `<div class="stat"><b>${nBooks}</b><span>${nBooks === 1 ? 'livro' : 'livros'} na grade</span></div>`}</div>
   ${status}
   <button class="btn primary block" data-ga="apply" style="margin-bottom:14px">🗓️ ${S.gradeApplied ? 'Reaplicar na agenda' : 'Aplicar na agenda'}</button>
   ${gridHtml}
-  <div class="section-h"><h3>${cap(WDF[gradeDay])}${bl.length ? ` · ${bl.length} ${bl.length === 1 ? 'aula' : 'aulas'} · ${durLabel(dayMin)}` : ''}</h3><button class="link" data-ga="new">+ Aula</button></div>
+  <div class="section-h"><h3>${cap(WDF[gradeDay])}${bl.length ? ` · ${bl.length} ${bl.length === 1 ? U.one : U.many} · ${durLabel(dayMin)}` : ''}</h3><button class="link" data-ga="new">+ ${U.add}</button></div>
   <div class="chips daypick" style="margin-bottom:12px">${WEEK.map(d => { const n = blocksOn(d).length; return `<button class="chip ${d === gradeDay ? 'on' : ''}" data-gday="${d}">${WDL[d]}${n ? `<small>${n}</small>` : ''}</button>`; }).join('')}</div>
   ${bl.length ? `<div class="list">${dayHtml}</div>
-    <div class="g-actions"><button class="btn sm" data-ga="copy">📋 Copiar ${WDL[gradeDay].toLowerCase()} para…</button><button class="btn sm" data-ga="new">${I.plus} Aula</button></div>`
-    : `<div class="card empty" style="padding:22px"><div class="em" style="font-size:32px">☀️</div><b>${cap(WDF[gradeDay])} livre</b><p>Nenhuma aula neste dia.</p><button class="btn sm primary" data-ga="new">${I.plus} Adicionar aula</button></div>`}
+    <div class="g-actions"><button class="btn sm" data-ga="copy">📋 Copiar ${WDL[gradeDay].toLowerCase()} para…</button><button class="btn sm" data-ga="new">${I.plus} ${U.add}</button></div>`
+    : `<div class="card empty" style="padding:22px"><div class="em" style="font-size:32px">☀️</div><b>${cap(WDF[gradeDay])} livre</b><p>Nenhum${life ? '' : 'a'} ${U.one} neste dia.</p><button class="btn sm primary" data-ga="new">${I.plus} Adicionar ${U.one}</button></div>`}
   `;
 }
 
 function openBlockForm(b, preset = {}) {
   const edit = !!b;
-  F = { kind: 'block', edit, id: b?.id, days: edit ? [b.day] : (preset.days || [gradeDay]), book: edit ? (b.book || '') : (preset.book ?? (S.books[0]?.id || '')), type: b?.type || 'leitura', remind: b?.remind ?? S.settings.remind };
+  const bkind = b ? kindOf(b) : (preset.kind || gradeKind), life = bkind === 'life';
+  F = { kind: 'block', bkind, edit, id: b?.id, days: edit ? [b.day] : (preset.days || [gradeDay]), book: life ? '' : edit ? (b.book || '') : (preset.book ?? (S.books[0]?.id || '')), type: b?.type || (life ? 'consultoria' : 'leitura'), remind: b?.remind ?? S.settings.remind };
   const start = b?.start || preset.start || '07:00', end = b?.end || preset.end || fromMin(Math.min(toMin(start) + 90, 1439));
   const bookOpts = [...S.books.map(x => ({ v: x.id, l: esc(bookName(x)), c: x.color })), { v: '', l: '✏️ Outro' }];
   const bk = bookOf(F.book);
   openSheet(`
-    <h2>${edit ? 'Editar aula' : 'Nova aula'}</h2>
-    ${S.books.length ? `<div class="field"><label>Livro</label>${chipsHtml('book', bookOpts, F.book)}</div>` : ''}
-    <div class="field"><input class="inp big" id="gTitle" placeholder="${bk ? esc('Ler ' + bookName(bk)) : 'O que você vai estudar?'}" value="${esc(b && !(bk && b.title === 'Ler ' + bookName(bk)) ? b.title : '')}" maxlength="80" autocomplete="off">
-      <div class="hint">Deixe em branco para usar “Ler + nome do livro”.</div></div>
+    <h2>${life ? (edit ? 'Editar bloco' : 'Novo bloco da rotina') : (edit ? 'Editar aula' : 'Nova aula')}</h2>
+    ${life ? (edit ? '' : `<div class="quick">${LIFE_QUICK.map((q, i) => `<button class="chip" data-gquick="${i}">${typeOf(q.type).emoji} ${q.t}</button>`).join('')}</div>`)
+      : S.books.length ? `<div class="field"><label>Livro</label>${chipsHtml('book', bookOpts, F.book)}</div>` : ''}
+    <div class="field"><input class="inp big" id="gTitle" placeholder="${life ? 'Ex.: Trabalhar na consultoria' : bk ? esc('Ler ' + bookName(bk)) : 'O que você vai estudar?'}" value="${esc(b && !(bk && b.title === 'Ler ' + bookName(bk)) ? b.title : '')}" maxlength="80" autocomplete="off">
+      ${life ? '' : '<div class="hint">Deixe em branco para usar “Ler + nome do livro”.</div>'}</div>
     <div class="field"><label>${edit ? 'Dia' : 'Dias da semana'}</label>
       ${edit ? '' : `<div class="chips" style="margin-bottom:8px"><button type="button" class="chip" data-days="wk">Seg a Sex</button><button type="button" class="chip" data-days="all">Todos</button></div>`}
       ${chipsHtml('days', WEEK.map(d => ({ v: d, l: WDL[d].slice(0, 1), cls: 'day' })), F.days, true)}</div>
     <div class="field"><label>Horário</label><div class="row2"><div><input type="time" class="inp" id="gStart" value="${start}"><div class="hint">Início</div></div><div><input type="time" class="inp" id="gEnd" value="${end}"><div class="hint">Fim</div></div></div>
       <div class="chips" style="margin-top:8px" data-group="gdur">${[45, 60, 90, 120].map(m => `<button type="button" class="chip" data-v="${m}">${durLabel(m)}</button>`).join('')}</div></div>
-    <div class="field"><label>Tipo</label>${chipsHtml('type', TYPES.map(t => ({ v: t.id, l: `${t.emoji} ${t.label}`, c: t.color })), F.type)}</div>
+    <div class="field"><label>${life ? 'Categoria' : 'Tipo'}</label>${chipsHtml('type', (life ? LIFE_TYPES : STUDY_TYPES).map(t => ({ v: t.id, l: `${t.emoji} ${t.label}`, c: t.color })), F.type)}</div>
     <div class="field"><label>Lembrete</label>${chipsHtml('remind', REMINDS.map(r => ({ v: r.v, l: r.v === 0 ? '🔔 Na hora' : r.l })), F.remind)}</div>
-    <div class="field"><textarea class="inp" id="gDesc" placeholder="Observação (capítulo, meta, onde parou…)">${esc(b?.desc || '')}</textarea></div>
-    <button class="btn primary block" id="gSave">${edit ? 'Salvar aula' : 'Adicionar à grade'}</button>
+    <div class="field"><textarea class="inp" id="gDesc" placeholder="${life ? 'Observação (o que fazer nesse horário…)' : 'Observação (capítulo, meta, onde parou…)'}">${esc(b?.desc || '')}</textarea></div>
+    <button class="btn primary block" id="gSave">${edit ? 'Salvar' : life ? 'Adicionar à rotina' : 'Adicionar à grade'}</button>
     ${edit ? `<div class="actions-grid"><button class="btn sm" data-ga="dupBlock">📄 Duplicar</button><button class="btn sm danger" id="gDel">🗑️ Excluir</button></div>` : ''}
   `);
 }
@@ -742,13 +777,13 @@ function saveBlock() {
   const bk = bookOf(F.book);
   let title = $('#gTitle').value.trim();
   if (!title) { if (bk) title = `Ler ${bookName(bk)}`; else { const i = $('#gTitle'); i.classList.remove('shake'); void i.offsetWidth; i.classList.add('shake'); i.focus(); return; } }
-  const data = { start, end, title, book: F.book, type: F.type, remind: F.remind, desc: $('#gDesc').value.trim() };
+  const data = { start, end, title, book: F.bkind === 'life' ? '' : F.book, type: F.type, remind: F.remind, desc: $('#gDesc').value.trim(), kind: F.bkind };
   if (F.edit) Object.assign(S.grade.find(x => x.id === F.id), data, { day: F.days[0] });
   else F.days.forEach(d => S.grade.push({ id: uid(), day: d, ...data }));
   gradeDay = F.days.includes(gradeDay) ? gradeDay : F.days[0];
-  const n = F.edit ? 0 : F.days.length;
+  const n = F.edit ? 0 : F.days.length, lifeK = F.bkind === 'life';
   markGrade(); persist(); closeSheet(); render();
-  toast(F?.edit === false || n ? `${n} ${n === 1 ? 'aula adicionada' : 'aulas adicionadas'} 🏫` : 'Aula atualizada');
+  toast(n ? (lifeK ? `${n} ${n === 1 ? 'bloco adicionado' : 'blocos adicionados'} ⚡` : `${n} ${n === 1 ? 'aula adicionada' : 'aulas adicionadas'} 🏫`) : 'Atualizado ✓');
 }
 function openCopyDay() {
   F = { kind: 'copy', from: gradeDay, days: [], replace: true };
@@ -758,7 +793,7 @@ function openCopyDay() {
     <div class="field"><label>Para quais dias?</label>
       <div class="chips" style="margin-bottom:8px"><button type="button" class="chip" data-days="wk">Seg a Sex</button></div>
       ${chipsHtml('days', WEEK.filter(d => d !== gradeDay).map(d => ({ v: d, l: WDL[d].slice(0, 1), cls: 'day' })), [], true)}</div>
-    <div class="field"><div class="switch-row" data-toggle="replace"><div class="txt">Substituir o que já existe<small>Apaga as aulas atuais desses dias antes de copiar</small></div><div class="sw on"></div></div></div>
+    <div class="field"><div class="switch-row" data-toggle="replace"><div class="txt">Substituir o que já existe<small>Apaga ${gradeKind === 'life' ? 'os blocos' : 'as aulas'} atuais desses dias antes de copiar</small></div><div class="sw on"></div></div></div>
     <button class="btn primary block" id="cSave">Copiar</button>
   `);
 }
@@ -766,11 +801,20 @@ function saveCopyDay() {
   const targets = F.days.filter(d => d !== F.from);
   if (!targets.length) { toast('Escolha os dias'); return; }
   const src = blocksOn(F.from);
-  if (F.replace) S.grade = S.grade.filter(b => !targets.includes(b.day));
+  if (F.replace) S.grade = S.grade.filter(b => !(targets.includes(b.day) && kindOf(b) === gradeKind));
   targets.forEach(d => src.forEach(b => S.grade.push({ ...b, id: uid(), day: d })));
   markGrade(); persist(); closeSheet(); render(); toast(`Copiado para ${targets.length} ${targets.length === 1 ? 'dia' : 'dias'} ✓`);
 }
 function gradeTemplate() {
+  if (gradeKind === 'life') {
+    const r = S.settings.remind;
+    [1, 2, 3, 4, 5].forEach(d => {
+      S.grade.push({ id: uid(), day: d, start: '14:00', end: '17:00', book: '', type: 'consultoria', remind: r, title: 'Trabalhar na consultoria', desc: '', kind: 'life' });
+      S.grade.push({ id: uid(), day: d, start: '18:00', end: '19:30', book: '', type: 'treino', remind: r, title: 'Treino', desc: '', kind: 'life' });
+    });
+    gradeDay = [1, 2, 3, 4, 5].includes(new Date().getDay()) ? new Date().getDay() : 1;
+    markGrade(); persist(); render(); toast('Modelo criado — toque num bloco para ajustar'); return;
+  }
   const a = S.books[0], b = S.books[1] || S.books[0], r = S.settings.remind;
   [1, 2, 3, 4, 5].forEach(d => {
     S.grade.push({ id: uid(), day: d, start: '07:00', end: '08:30', book: a?.id || '', type: 'leitura', remind: r, title: a ? `Ler ${bookName(a)}` : 'Leitura 1', desc: '' });
@@ -789,9 +833,9 @@ function openApply() {
     <h2>Aplicar na agenda</h2>
     <div class="preview" id="aPrev"></div>
     <div class="field"><label>Período</label><div class="row2"><div><input type="date" class="inp" id="aStart" value="${start}"><div class="hint">De</div></div><div><input type="date" class="inp" id="aEnd" value="${end}"><div class="hint">Até</div></div></div></div>
-    <div class="field"><div class="switch-row" data-toggle="cal"><div class="txt">🔒 Alerta na tela bloqueada<small>Cria as aulas no Calendário do iPhone, repetindo toda semana</small></div><div class="sw ${F.cal ? 'on' : ''}"></div></div></div>
-    <button class="btn primary block" id="aSave">Aplicar grade</button>
-    <p class="hint">Cada aula vira uma tarefa com lembrete, que você marca como feita. Se já tinha aplicado antes, as aulas futuras não concluídas são trocadas pelas novas.${S.gradeApplied ? ' <b>No Calendário do iPhone</b>, apague a série antiga (“excluir eventos futuros”) para não duplicar.' : ''}</p>
+    <div class="field"><div class="switch-row" data-toggle="cal"><div class="txt">🔒 Alerta na tela bloqueada<small>Cria os horários no Calendário do iPhone, repetindo toda semana</small></div><div class="sw ${F.cal ? 'on' : ''}"></div></div></div>
+    <button class="btn primary block" id="aSave">Aplicar minha semana</button>
+    <p class="hint">Aplica a grade de estudos e a rotina juntas. Cada horário vira uma tarefa com lembrete, que você marca como feita. Se já tinha aplicado antes, as aulas futuras não concluídas são trocadas pelas novas.${S.gradeApplied ? ' <b>No Calendário do iPhone</b>, apague a série antiga (“excluir eventos futuros”) para não duplicar.' : ''}</p>
   `);
   updApply();
 }
@@ -799,7 +843,7 @@ function applyList() {
   const out = [], nowHM = fromMin(new Date().getHours() * 60 + new Date().getMinutes());
   let d = F.start;
   for (let i = 0; i < 400 && d <= F.end; i++) {
-    blocksOn(parseYmd(d).getDay()).forEach(b => { if (!(d === today() && b.start <= nowHM)) out.push({ d, b }); });
+    blocksOn(parseYmd(d).getDay(), 'all').forEach(b => { if (!(d === today() && b.start <= nowHM)) out.push({ d, b }); });
     d = addDays(d, 1);
   }
   return out;
@@ -809,7 +853,7 @@ function updApply() {
   if (F.start < today()) F.start = today();
   const n = applyList().length, weeks = Math.max(1, Math.round((diffDays(F.start, F.end) + 1) / 7));
   const min = applyList().reduce((a, x) => a + toMin(x.b.end) - toMin(x.b.start), 0);
-  $('#aPrev').innerHTML = n ? `<b>${n} aulas</b> na agenda<br>≈ ${weeks} ${weeks === 1 ? 'semana' : 'semanas'} · ${Math.round(min / 60)}h de estudo planejadas` : 'Nenhuma aula cai nesse período.';
+  $('#aPrev').innerHTML = n ? `<b>${n} tarefas</b> na agenda<br>≈ ${weeks} ${weeks === 1 ? 'semana' : 'semanas'} · ${Math.round(min / 60)}h planejadas (estudos + rotina)` : 'Nenhuma aula cai nesse período.';
 }
 function saveApply() {
   updApply();
@@ -820,7 +864,7 @@ function saveApply() {
   S.gradeDirty = false; S.gradeApplied = { start: F.start, end: F.end, at: Date.now() };
   S.settings.calDefault = F.cal;
   if (F.cal) exportGradeICS(F.start, F.end);
-  persist(); closeSheet(); render(); toast(`${created.length} aulas na agenda 🏫`);
+  persist(); closeSheet(); render(); toast(`${created.length} tarefas na agenda 🗓️`);
 }
 function exportGradeICS(start, end) {
   S.gradeSeq = (S.gradeSeq || 0) + 1;
@@ -832,16 +876,16 @@ function exportGradeICS(start, end) {
     const s = parseYmd(d); s.setHours(...b.start.split(':').map(Number), 0, 0);
     const e = new Date(s.getTime() + (toMin(b.end) - toMin(b.start)) * 60000);
     const bk = bookOf(b.book), ty = typeOf(b.type);
-    const desc = [b.desc, bk ? `Livro: ${bk.title}` : '', `🏫 Grade semanal · ${b.start}–${b.end}`].filter(Boolean).join('\n');
+    const desc = [b.desc, bk ? `Livro: ${bk.title}` : '', `${kindOf(b) === 'life' ? '⚡ Rotina' : '🏫 Grade semanal'} · ${b.start}–${b.end}`].filter(Boolean).join('\n');
     L.push('BEGIN:VEVENT', `UID:${b.id}@mg-grade`, `SEQUENCE:${S.gradeSeq}`, `DTSTAMP:${stamp}`, `DTSTART:${icsLocal(s)}`, `DTEND:${icsLocal(e)}`, `RRULE:FREQ=WEEKLY;UNTIL=${end.replace(/-/g, '')}T235959`,
-      `SUMMARY:${icsEsc(ty.emoji + ' ' + b.title)}`, `DESCRIPTION:${icsEsc(desc)}`, 'CATEGORIES:Estudos', 'STATUS:CONFIRMED');
+      `SUMMARY:${icsEsc(ty.emoji + ' ' + b.title)}`, `DESCRIPTION:${icsEsc(desc)}`, `CATEGORIES:${kindOf(b) === 'life' ? 'Rotina' : 'Estudos'}`, 'STATUS:CONFIRMED');
     const alarm = trig => L.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${icsEsc(b.title)}`, trig, 'END:VALARM');
     if (b.remind > 0) alarm(`TRIGGER:-PT${b.remind}M`);
     if (b.remind >= 0) alarm('TRIGGER:PT0M');
     L.push('END:VEVENT');
   });
   L.push('END:VCALENDAR');
-  downloadFile(L.map(icsFold).join('\r\n') + '\r\n', 'grade-semanal.ics', 'text/calendar;charset=utf-8');
+  downloadFile(L.map(icsFold).join('\r\n') + '\r\n', 'minha-semana.ics', 'text/calendar;charset=utf-8');
 }
 
 function viewMonth() {
@@ -1423,7 +1467,7 @@ document.addEventListener('click', async e => {
   if (justSwiped) { justSwiped = false; return; }
   const el = e.target;
   const nav = el.closest('[data-nav]'); if (nav) { view = nav.dataset.nav; window.scrollTo(0, 0); render(); return; }
-  if (el.closest('#fab')) { if (view === 'agenda' && S.settings.agendaMode === 'grade') openBlockForm(null, { days: [gradeDay] }); else openTaskForm(null); return; }
+  if (el.closest('#fab')) { if (view === 'agenda' && ['grade', 'rotina'].includes(S.settings.agendaMode)) openBlockForm(null, { days: [gradeDay] }); else openTaskForm(null); return; }
   const am = el.closest('[data-amode]'); if (am) { S.settings.agendaMode = am.dataset.amode; persist(); render(); return; }
   const gb = el.closest('[data-gblock]'); if (gb && !el.closest('#sheet')) { openBlockForm(S.grade.find(b => b.id === gb.dataset.gblock)); return; }
   const gc = el.closest('[data-gcol]'); if (gc) { const r = gc.getBoundingClientRect(); const m = +gc.dataset.h0 * 60 + (e.clientY - r.top) / +gc.dataset.ppm; const st = Math.max(0, Math.floor(m / 30) * 30); gradeDay = +gc.dataset.gcol; openBlockForm(null, { days: [gradeDay], start: fromMin(st), end: fromMin(Math.min(st + 90, 1439)) }); return; }
@@ -1436,8 +1480,10 @@ document.addEventListener('click', async e => {
     if (a === 'apply') { closeSheet(); return openApply(); }
     if (a === 'template') return gradeTemplate();
     if (a === 'weekend') { S.settings.gradeWeekend = !S.settings.gradeWeekend; persist(); render(); return; }
+    if (a === 'other') { S.settings.showOther = S.settings.showOther === false; persist(); render(); return; }
     if (a === 'dupBlock') { const b = S.grade.find(x => x.id === F.id); closeSheet(); return openBlockForm(null, { days: [b.day], start: b.end, end: fromMin(Math.min(toMin(b.end) + toMin(b.end) - toMin(b.start), 1439)), book: b.book }); }
   }
+  const gq = el.closest('[data-gquick]'); if (gq && F) { const q = LIFE_QUICK[+gq.dataset.gquick]; $('#gTitle').value = q.t; F.type = q.type; $$('#sheet [data-group="type"] .chip').forEach(c => c.classList.toggle('on', c.dataset.v === q.type)); return; }
   if (el.closest('#gSave')) return saveBlock();
   if (el.closest('#gDel')) { const b = S.grade.find(x => x.id === F.id); const ok = await ask({ title: 'Excluir aula?', text: `${WDL[b.day]} · ${b.start}–${b.end} · ${esc(b.title)}`, buttons: [{ label: 'Excluir', value: 1, style: 'danger' }, { label: 'Cancelar', value: 0, style: 'ghost' }] }); if (ok) { S.grade = S.grade.filter(x => x.id !== b.id); markGrade(); persist(); closeSheet(); render(); toast('Aula excluída'); } return; }
   if (el.closest('#cSave')) return saveCopyDay();
@@ -1488,7 +1534,7 @@ document.addEventListener('click', async e => {
   if (el.closest('#bSave')) return saveBook();
   if (el.closest('#bDel')) { const b = bookOf(F.id); const ok = await ask({ title: 'Remover livro?', text: `${esc(b.title)} sai da estante. As tarefas continuam na agenda.`, buttons: [{ label: 'Remover', value: 1, style: 'danger' }, { label: 'Cancelar', value: 0, style: 'ghost' }] }); if (ok) { S.books = S.books.filter(x => x.id !== b.id); S.tasks.forEach(t => { if (t.book === b.id) t.book = ''; }); S.grade.forEach(g => { if (g.book === b.id) g.book = ''; }); persist(); closeSheet(); render(); } return; }
   const eb = el.closest('[data-editbook]'); if (eb) return openBookForm(bookOf(eb.dataset.editbook));
-  const gbk = el.closest('[data-gradebook]'); if (gbk) { S.settings.agendaMode = 'grade'; view = 'agenda'; persist(); window.scrollTo(0, 0); render(); openBlockForm(null, { days: [gradeDay], book: gbk.dataset.gradebook }); return; }
+  const gbk = el.closest('[data-gradebook]'); if (gbk) { S.settings.agendaMode = 'grade'; gradeKind = 'study'; view = 'agenda'; persist(); window.scrollTo(0, 0); render(); openBlockForm(null, { days: [gradeDay], book: gbk.dataset.gradebook }); return; }
   const lb = el.closest('[data-logbook]'); if (lb) return openLog(lb.dataset.logbook);
   const pb = el.closest('[data-planbook]'); if (pb) { closeSheet(); return openPlan(pb.dataset.planbook); }
   const stp = el.closest('[data-step]'); if (stp) { const i = $('#lPage'); i.value = Math.max(0, (parseInt(i.value) || 0) + +stp.dataset.step); updLog(); return; }
